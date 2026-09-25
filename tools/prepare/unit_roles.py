@@ -14,7 +14,6 @@ from wc3agent.game.roles import ROLES, TABLE, stats_role
 REFERENCE_PATH = TABLE.with_name("reference.json")
 
 
-
 def main():
     units = json.loads(REFERENCE_PATH.read_text(encoding="utf-8"))["units"]
     table = json.loads(TABLE.read_text(encoding="utf-8"))
@@ -23,9 +22,7 @@ def main():
     if unknown:
         raise ValueError(f"unknown roles: {unknown}")
     table["roles"] = {
-        raw: assigned.get(raw) or stats_role(unit)
-        for raw, unit in sorted(units.items())
-        if not unit.get("structure")
+        raw: assigned.get(raw) or stats_role(unit) for raw, unit in sorted(units.items()) if not unit.get("structure")
     }
     TABLE.write_text(json.dumps(table, indent=1) + "\n", encoding="utf-8")
     print(f"{len(table['roles'])} units:", dict(Counter(table["roles"].values())))

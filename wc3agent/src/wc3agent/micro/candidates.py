@@ -264,7 +264,8 @@ def unit_candidates(unit, obs, capability, catalog, dead_ends=(), toggles=None, 
                 friendly = (
                     not tags
                     or "dead" in tags
-                    or not {"enemy", "neutral"} & tags and {"friend", "ally", "player", "self"} & tags
+                    or not {"enemy", "neutral"} & tags
+                    and {"friend", "ally", "player", "self"} & tags
                 )
                 if order["kind"] == "cast" and order["target_form"] != "unit" and ability.get("area") and not friendly:
                     # How many enemies an area spell would hit now: around the caster (War Stomp) or the point.

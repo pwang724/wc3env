@@ -79,7 +79,9 @@ def build(source: Path, output: Path) -> Path:
         terrain, centre = flat_terrain(archive.read("war3map.w3e"))
         script = archive.read("war3map.j").decode("latin-1")
         # Playable area from the camera bounds the script sets (left, bottom, right, top).
-        numbers = re.search(r"SetCameraBounds\(\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)", script)
+        numbers = re.search(
+            r"SetCameraBounds\(\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)[^,]*,\s*(-?[\d.]+)", script
+        )
         bounds = tuple(float(v) for v in numbers.groups())
         if "call CreateAllUnits(  )" not in script:
             raise ValueError("the map script does not create its units with CreateAllUnits")
