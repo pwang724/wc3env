@@ -1,0 +1,60 @@
+{
+  "title": "Towers before the raid",
+  "race": "human",
+  "minutes": 4.5,
+  "opponent": "raid",
+  "opponent_after_seconds": 150,
+  "goal": "Three Grunts will raid your Peasants in about two and a half minutes; you have two Footmen. Get towers up in time: a Guard Tower needs a Lumber Mill, so build the Lumber Mill at once, then two Scout Towers between the Gold Mine and the Town Hall (build #peasant Scout Tower near the gold mine), and upgrade each to a Guard Tower as soon as the mill stands (upgrade #tower Guard Tower). Keep the other Peasants mining. When the raid comes, cast Call to Arms at the Town Hall and fight under the towers.",
+  "setup": [
+    {
+      "op": "resources",
+      "gold": 1000,
+      "lumber": 600
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 2,
+      "at": "home",
+      "dx": 300,
+      "dy": -500,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "ogru",
+      "n": 3,
+      "at": "toward:enemy_home:7500",
+      "dx": 0,
+      "dy": 0,
+      "owner": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "first_time:hgtw",
+      "op": "<=",
+      "value": 170
+    },
+    {
+      "metric": "count:hgtw",
+      "op": ">=",
+      "value": 2
+    },
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "workers_lost",
+      "op": "<=",
+      "value": 2
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "title": "Ten minutes against the easy computer",
+  "minutes": 10,
+  "opponent": "computer",
+  "goal": "Play a real game against the easy computer for ten minutes. Build an economy, a hero and an army, creep for levels, and be strong at the end.",
+  "setup": [],
+  "checks": [
+    {
+      "metric": "total",
+      "op": ">=",
+      "value": 3000
+    },
+    {
+      "metric": "hero_level",
+      "op": ">=",
+      "value": 3
+    },
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 14
+    },
+    {
+      "metric": "units_killed",
+      "op": ">=",
+      "value": 10
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "idle_worker_seconds",
+      "op": "<=",
+      "value": 90
+    }
+  ]
+}

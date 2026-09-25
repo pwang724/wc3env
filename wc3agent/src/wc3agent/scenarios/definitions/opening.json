@@ -1,0 +1,59 @@
+{
+  "title": "Opening build",
+  "minutes": 4,
+  "opponent": "computer",
+  "goal": "Play the first four minutes of a normal game as well as you can: constant worker production, no idle workers, Altar, Barracks and Farms on time, first hero out early, first soldiers trained.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    }
+  ],
+  "checks": [
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 11
+    },
+    {
+      "metric": "gold_mined",
+      "op": ">=",
+      "value": 1300
+    },
+    {
+      "metric": "lumber_total",
+      "op": ">=",
+      "value": 300
+    },
+    {
+      "metric": "hero_time",
+      "op": "<=",
+      "value": 150
+    },
+    {
+      "metric": "first_time:hbar",
+      "op": "<=",
+      "value": 130
+    },
+    {
+      "metric": "first_time:hfoo",
+      "op": "<=",
+      "value": 190
+    },
+    {
+      "metric": "idle_worker_seconds",
+      "op": "<=",
+      "value": 30
+    },
+    {
+      "metric": "supply_blocked_seconds",
+      "op": "<=",
+      "value": 15
+    },
+    {
+      "metric": "average_unspent_gold",
+      "op": "<=",
+      "value": 350
+    }
+  ]
+}

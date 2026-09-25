@@ -1,0 +1,44 @@
+{
+  "name": "shop_buy",
+  "agent": "tests.e2e.extended.scenarios.shop:Shop",
+  "params": {
+    "shop": "ngme",
+    "buyer": "Hamg",
+    "item": "dust"
+  },
+  "max_ticks": 60,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "ngme",
+      "player": 15,
+      "x": 4300.0,
+      "y": 2200.0,
+      "n": 1
+    }
+  ],
+  "notes": "A hero buys Dust of Appearance (in stock from the first second) from a neutral Goblin Merchant: item_sold, gold spent, item carried."
+}

@@ -1,0 +1,61 @@
+{
+  "title": "Creeping the nearest weak camp",
+  "minutes": 2.5,
+  "opponent": "computer",
+  "finish": "camp_cleared",
+  "finish_after_seconds": 15,
+  "goal": "Your Archmage and four Footmen stand next to the nearest creep camp. Clear it quickly, lose nobody, keep the hero healthy, spend the hero's skill point, and pick up whatever the creeps drop.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 1,
+      "at": "toward:nearest_camp:900",
+      "tag": "hero"
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 4,
+      "at": "toward:nearest_camp:900",
+      "dx": 150,
+      "tag": "army"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "camp_cleared",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "seconds",
+      "op": "<=",
+      "value": 90
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "hero_health_percent",
+      "op": ">=",
+      "value": 60
+    },
+    {
+      "metric": "unspent_skill_points",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "items_picked_up",
+      "op": ">=",
+      "value": 1
+    }
+  ]
+}

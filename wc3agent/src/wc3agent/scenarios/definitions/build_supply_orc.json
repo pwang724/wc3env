@@ -1,0 +1,48 @@
+{
+  "title": "Burrows before the food cap (Orc)",
+  "race": "orc",
+  "minutes": 3,
+  "opponent": "computer",
+  "goal": "You are almost at the food cap with money in the bank. Build Orc Burrows right away, at least three, so production never stops: keep the hall training workers the whole time and never get supply blocked. Send workers to gold and lumber first.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 600,
+      "lumber": 500
+    },
+    {
+      "op": "spawn",
+      "type": "ogru",
+      "n": 1,
+      "at": "home",
+      "dx": 300,
+      "dy": -500
+    }
+  ],
+  "checks": [
+    {
+      "metric": "count:otrb",
+      "op": ">=",
+      "value": 3
+    },
+    {
+      "metric": "supply_blocked_seconds",
+      "op": "<=",
+      "value": 60
+    },
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 9
+    },
+    {
+      "metric": "idle_worker_seconds",
+      "op": "<=",
+      "value": 30
+    }
+  ]
+}

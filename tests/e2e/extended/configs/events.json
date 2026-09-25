@@ -1,0 +1,58 @@
+{
+  "name": "events",
+  "agent": "tests.e2e.extended.scenarios.events:Events",
+  "max_ticks": 360,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "spawn",
+      "type_id": "hbla",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2400.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2800.0,
+      "n": 1
+    },
+    {
+      "op": "item",
+      "type_id": "ratc",
+      "x": 4500.0,
+      "y": 2800.0
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 12,
+      "x": 4900.0,
+      "y": 2800.0,
+      "n": 1
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "notes": "research_finish, upgrade_finish (Town Hall to Keep), item_pickup from the ground, hero_level and attacked."
+}

@@ -1,0 +1,639 @@
+{
+  "creep_camps": [
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Gnoll Brute",
+          "type_id": "ngnb"
+        },
+        {
+          "level": 1,
+          "name": "Gnoll Poacher",
+          "type_id": "ngna"
+        },
+        {
+          "level": 1,
+          "name": "Gnoll Poacher",
+          "type_id": "ngna"
+        }
+      ],
+      "drops": [
+        "random level 1 charged item"
+      ],
+      "total_level": 5,
+      "x": -5620,
+      "y": 679
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Gnoll Brute",
+          "type_id": "ngnb"
+        },
+        {
+          "level": 1,
+          "name": "Gnoll Poacher",
+          "type_id": "ngna"
+        },
+        {
+          "level": 1,
+          "name": "Gnoll Poacher",
+          "type_id": "ngna"
+        }
+      ],
+      "drops": [
+        "random level 1 charged item"
+      ],
+      "total_level": 5,
+      "x": 5198,
+      "y": 814
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        }
+      ],
+      "drops": [
+        "random level 2 charged item"
+      ],
+      "total_level": 8,
+      "x": -3130,
+      "y": -3666
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        }
+      ],
+      "drops": [
+        "random level 2 charged item"
+      ],
+      "total_level": 8,
+      "x": 2821,
+      "y": -3791
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Ogre Warrior",
+          "type_id": "nogr"
+        }
+      ],
+      "drops": [
+        "random level 2 any item"
+      ],
+      "total_level": 9,
+      "x": -3333,
+      "y": 4454
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Ogre Warrior",
+          "type_id": "nogr"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        }
+      ],
+      "drops": [
+        "random level 2 any item"
+      ],
+      "total_level": 9,
+      "x": 2879,
+      "y": 4444
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Ogre Magi",
+          "type_id": "nomg"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        }
+      ],
+      "drops": [
+        "random level 2 any item"
+      ],
+      "total_level": 11,
+      "x": 4140,
+      "y": -2977
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Ogre Magi",
+          "type_id": "nomg"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        }
+      ],
+      "drops": [
+        "random level 2 any item"
+      ],
+      "total_level": 11,
+      "x": -4654,
+      "y": -2972
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Ogre Mauler",
+          "type_id": "nogm"
+        },
+        {
+          "level": 4,
+          "name": "Forest Troll Berserker",
+          "type_id": "nftb"
+        },
+        {
+          "level": 4,
+          "name": "Forest Troll Berserker",
+          "type_id": "nftb"
+        }
+      ],
+      "drops": [
+        "random level 2 permanent item",
+        "random level 1 charged item"
+      ],
+      "total_level": 13,
+      "x": -240,
+      "y": -3144
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        }
+      ],
+      "drops": [
+        "random level 2 any item",
+        "random level 1 charged item"
+      ],
+      "total_level": 13,
+      "x": 2824,
+      "y": -725
+    },
+    {
+      "creeps": [
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        },
+        {
+          "level": 1,
+          "name": "Murloc Tiderunner",
+          "type_id": "nmrl"
+        }
+      ],
+      "drops": [
+        "random level 2 any item",
+        "random level 1 charged item"
+      ],
+      "total_level": 13,
+      "x": -3472,
+      "y": -847
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Renegade Wizard",
+          "type_id": "nwzg"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Tunneler",
+          "type_id": "nkot"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Geomancer",
+          "type_id": "nkog"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Tunneler",
+          "type_id": "nkot"
+        },
+        {
+          "level": 1,
+          "name": "Kobold",
+          "type_id": "nkob"
+        },
+        {
+          "level": 1,
+          "name": "Kobold",
+          "type_id": "nkob"
+        }
+      ],
+      "drops": [
+        "random level 3 any item",
+        "random level 1 permanent item"
+      ],
+      "total_level": 16,
+      "x": 5833,
+      "y": -778
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Renegade Wizard",
+          "type_id": "nwzg"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Tunneler",
+          "type_id": "nkot"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Tunneler",
+          "type_id": "nkot"
+        },
+        {
+          "level": 3,
+          "name": "Kobold Geomancer",
+          "type_id": "nkog"
+        },
+        {
+          "level": 1,
+          "name": "Kobold",
+          "type_id": "nkob"
+        },
+        {
+          "level": 1,
+          "name": "Kobold",
+          "type_id": "nkob"
+        }
+      ],
+      "drops": [
+        "random level 3 any item",
+        "random level 1 permanent item"
+      ],
+      "total_level": 16,
+      "x": -6324,
+      "y": -770
+    },
+    {
+      "creeps": [
+        {
+          "level": 7,
+          "name": "Gargantuan Sea Turtle",
+          "type_id": "ntrg"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        }
+      ],
+      "drops": [
+        "random level 3 any item",
+        "random level 1 charged item"
+      ],
+      "total_level": 17,
+      "x": 6014,
+      "y": -4621
+    },
+    {
+      "creeps": [
+        {
+          "level": 7,
+          "name": "Gargantuan Sea Turtle",
+          "type_id": "ntrg"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 3,
+          "name": "Murloc Nightcrawler",
+          "type_id": "nmrm"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        },
+        {
+          "level": 2,
+          "name": "Murloc Huntsman",
+          "type_id": "nmrr"
+        }
+      ],
+      "drops": [
+        "random level 3 any item",
+        "random level 1 charged item"
+      ],
+      "total_level": 17,
+      "x": -6454,
+      "y": -3565
+    },
+    {
+      "creeps": [
+        {
+          "level": 5,
+          "name": "Ogre Magi",
+          "type_id": "nomg"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Forest Troll Trapper",
+          "type_id": "nftt"
+        },
+        {
+          "level": 3,
+          "name": "Ogre Warrior",
+          "type_id": "nogr"
+        },
+        {
+          "level": 3,
+          "name": "Ogre Warrior",
+          "type_id": "nogr"
+        }
+      ],
+      "drops": [
+        "random level 3 permanent item",
+        "random level 1 charged item"
+      ],
+      "total_level": 17,
+      "x": -251,
+      "y": 2978
+    }
+  ],
+  "gold_mines": [
+    {
+      "gold": 13500,
+      "guard_level": 0,
+      "x": -5632,
+      "y": 3584
+    },
+    {
+      "gold": 12500,
+      "guard_level": 11,
+      "x": -4864,
+      "y": -3200
+    },
+    {
+      "gold": 13500,
+      "guard_level": 0,
+      "x": 5120,
+      "y": 3584
+    },
+    {
+      "gold": 12500,
+      "guard_level": 11,
+      "x": 4352,
+      "y": -3200
+    }
+  ],
+  "map": "(2)EchoIsles.w3x",
+  "neutral_buildings": [
+    {
+      "name": "Tavern",
+      "sells_items": [],
+      "sells_units": [
+        "Nalc",
+        "Ntin",
+        "Nfir",
+        "Nngs",
+        "Nbrn",
+        "Npbm",
+        "Nplh",
+        "Nbst"
+      ],
+      "type_id": "ntav",
+      "x": -256,
+      "y": -640
+    },
+    {
+      "name": "Goblin Merchant",
+      "sells_items": [
+        "stwp",
+        "bspd",
+        "dust",
+        "tret",
+        "prvt",
+        "cnob",
+        "stel",
+        "pnvl",
+        "shea",
+        "spro",
+        "pinv"
+      ],
+      "sells_units": [],
+      "type_id": "ngme",
+      "x": -256,
+      "y": -3328
+    },
+    {
+      "name": "Mercenary Camp",
+      "sells_items": [],
+      "sells_units": [
+        "nftb",
+        "nfsp",
+        "nogm",
+        "ngrk"
+      ],
+      "type_id": "nmer",
+      "x": -6400,
+      "y": -768
+    },
+    {
+      "name": "Mercenary Camp",
+      "sells_items": [],
+      "sells_units": [
+        "nftb",
+        "nfsp",
+        "nogm",
+        "ngrk"
+      ],
+      "type_id": "nmer",
+      "x": 5888,
+      "y": -768
+    },
+    {
+      "name": "Marketplace",
+      "sells_items": [],
+      "sells_units": [],
+      "type_id": "nmrk",
+      "x": -256,
+      "y": 2944
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "map_sha256": "03f6f73a4f173b497ea85a7a99139c351394ba45a127fe14dc3e1eb26ab9108c",
+    "reference_sha256": "b891c30a08678aa5a5b99787eea31d7c1c511d8b9acdb1f2053cef8760b362eb"
+  },
+  "start_locations": [
+    {
+      "player": 0,
+      "x": -5184,
+      "y": 2944
+    },
+    {
+      "player": 1,
+      "x": 4672,
+      "y": 2944
+    }
+  ]
+}

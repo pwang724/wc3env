@@ -1,0 +1,58 @@
+{
+  "title": "Defending the base from a raid",
+  "minutes": 2.5,
+  "opponent": "attack",
+  "goal": "A raiding party is attacking your workers while your army stands on the far side of the base. Bring the army back, kill the raiders, and lose as few workers and buildings as you can.",
+  "setup": [
+    {
+      "op": "hero",
+      "type": "Hmkg",
+      "level": 2,
+      "at": "home",
+      "dx": -1800,
+      "dy": -1200,
+      "tag": "hero"
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 5,
+      "at": "home",
+      "dx": -1800,
+      "dy": -1000,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ogru",
+      "n": 4,
+      "at": "home",
+      "dx": 700,
+      "dy": 500,
+      "tag": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "workers_lost",
+      "op": "<=",
+      "value": 2
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 2
+    }
+  ]
+}

@@ -1,0 +1,490 @@
+{
+ "source": "Standard competitive melee skill builds, one ability id per hero level. Compiled from Liquipedia hero pages where they were readable; tavern heroes, Keeper of the Grove, Priestess of the Moon and Warden from standard play. The same sources back micro/unit_prompts.py UNIT_PROMPTS.",
+ "builds": {
+  "Hamg": [
+   "AHwe",
+   "AHab",
+   "AHwe",
+   "AHab",
+   "AHwe",
+   "AHmt",
+   "AHab",
+   "AHbz",
+   "AHbz",
+   "AHbz"
+  ],
+  "Hmkg": [
+   "AHtb",
+   "AHtc",
+   "AHtb",
+   "AHtc",
+   "AHtb",
+   "AHav",
+   "AHtc",
+   "AHbh",
+   "AHbh",
+   "AHbh"
+  ],
+  "Hpal": [
+   "AHhb",
+   "AHds",
+   "AHhb",
+   "AHad",
+   "AHhb",
+   "AHre",
+   "AHad",
+   "AHad",
+   "AHds",
+   "AHds"
+  ],
+  "Hblm": [
+   "AHfs",
+   "AHbn",
+   "AHfs",
+   "AHdr",
+   "AHfs",
+   "AHpx",
+   "AHbn",
+   "AHdr",
+   "AHbn",
+   "AHdr"
+  ],
+  "Obla": [
+   "AOwk",
+   "AOcr",
+   "AOcr",
+   "AOwk",
+   "AOcr",
+   "AOww",
+   "AOwk",
+   "AOmi",
+   "AOmi",
+   "AOmi"
+  ],
+  "Ofar": [
+   "AOsf",
+   "AOcl",
+   "AOsf",
+   "AOcl",
+   "AOsf",
+   "AOeq",
+   "AOcl",
+   "AOfs",
+   "AOfs",
+   "AOfs"
+  ],
+  "Otch": [
+   "AOws",
+   "AOae",
+   "AOws",
+   "AOae",
+   "AOws",
+   "AOre",
+   "AOsh",
+   "AOsh",
+   "AOsh",
+   "AOae"
+  ],
+  "Oshd": [
+   "AOhw",
+   "AOhx",
+   "AOhw",
+   "AOhx",
+   "AOhw",
+   "AOvd",
+   "AOhx",
+   "AOsw",
+   "AOsw",
+   "AOsw"
+  ],
+  "Udea": [
+   "AUdc",
+   "AUau",
+   "AUdc",
+   "AUau",
+   "AUdc",
+   "AUan",
+   "AUau",
+   "AUdp",
+   "AUdp",
+   "AUdp"
+  ],
+  "Ulic": [
+   "AUfn",
+   "AUdr",
+   "AUfn",
+   "AUdr",
+   "AUfn",
+   "AUdd",
+   "AUdr",
+   "AUfu",
+   "AUfu",
+   "AUfu"
+  ],
+  "Udre": [
+   "AUcs",
+   "AUav",
+   "AUcs",
+   "AUsl",
+   "AUcs",
+   "AUin",
+   "AUav",
+   "AUav",
+   "AUsl",
+   "AUsl"
+  ],
+  "Ucrl": [
+   "AUim",
+   "AUts",
+   "AUim",
+   "AUts",
+   "AUim",
+   "AUls",
+   "AUts",
+   "AUcb",
+   "AUcb",
+   "AUcb"
+  ],
+  "Edem": [
+   "AEmb",
+   "AEev",
+   "AEmb",
+   "AEev",
+   "AEmb",
+   "AEme",
+   "AEev",
+   "AEim",
+   "AEim",
+   "AEim"
+  ],
+  "Ekee": [
+   "AEer",
+   "AEfn",
+   "AEer",
+   "AEfn",
+   "AEer",
+   "AEtq",
+   "AEfn",
+   "AEah",
+   "AEah",
+   "AEah"
+  ],
+  "Emoo": [
+   "AHfa",
+   "AEar",
+   "AHfa",
+   "AEar",
+   "AHfa",
+   "AEsf",
+   "AEar",
+   "AEst",
+   "AEst",
+   "AEst"
+  ],
+  "Ewar": [
+   "AEfk",
+   "AEbl",
+   "AEfk",
+   "AEsh",
+   "AEfk",
+   "AEsv",
+   "AEbl",
+   "AEsh",
+   "AEsh",
+   "AEbl"
+  ],
+  "Nalc": [
+   "ANhs",
+   "ANcr",
+   "ANhs",
+   "ANcr",
+   "ANhs",
+   "ANtm",
+   "ANcr",
+   "ANab",
+   "ANab",
+   "ANab"
+  ],
+  "Nbrn": [
+   "ANba",
+   "ANsi",
+   "ANba",
+   "ANdr",
+   "ANba",
+   "ANch",
+   "ANsi",
+   "ANdr",
+   "ANdr",
+   "ANsi"
+  ],
+  "Nbst": [
+   "ANsg",
+   "ANsq",
+   "ANsg",
+   "ANsw",
+   "ANsg",
+   "ANst",
+   "ANsq",
+   "ANsq",
+   "ANsw",
+   "ANsw"
+  ],
+  "Nfir": [
+   "ANlm",
+   "ANso",
+   "ANlm",
+   "ANia",
+   "ANlm",
+   "ANvc",
+   "ANso",
+   "ANso",
+   "ANia",
+   "ANia"
+  ],
+  "Nngs": [
+   "ANfl",
+   "ANfa",
+   "ANfl",
+   "ANms",
+   "ANfl",
+   "ANto",
+   "ANfa",
+   "ANfa",
+   "ANms",
+   "ANms"
+  ],
+  "Npbm": [
+   "ANbf",
+   "ANdh",
+   "ANbf",
+   "ANdb",
+   "ANbf",
+   "ANef",
+   "ANdb",
+   "ANdb",
+   "ANdh",
+   "ANdh"
+  ],
+  "Nplh": [
+   "ANrf",
+   "ANca",
+   "ANrf",
+   "ANca",
+   "ANrf",
+   "ANdo",
+   "ANca",
+   "ANht",
+   "ANht",
+   "ANht"
+  ],
+  "Ntin": [
+   "ANsy",
+   "ANcs",
+   "ANsy",
+   "ANcs",
+   "ANsy",
+   "ANrg",
+   "ANcs",
+   "ANeg",
+   "ANeg",
+   "ANeg"
+  ]
+ },
+ "sources": {
+  "Hamg": [
+   "https://liquipedia.net/warcraft/Archmage"
+  ],
+  "Hmkg": [
+   "https://liquipedia.net/warcraft/Mountain_King"
+  ],
+  "Hpal": [
+   "https://liquipedia.net/warcraft/Paladin"
+  ],
+  "Hblm": [
+   "https://liquipedia.net/warcraft/Blood_Mage"
+  ],
+  "Obla": [
+   "https://liquipedia.net/warcraft/Blademaster"
+  ],
+  "Ofar": [
+   "https://liquipedia.net/warcraft/Far_Seer"
+  ],
+  "Otch": [
+   "https://liquipedia.net/warcraft/Tauren_Chieftain"
+  ],
+  "Oshd": [
+   "https://liquipedia.net/warcraft/Shadow_Hunter"
+  ],
+  "Udea": [
+   "https://liquipedia.net/warcraft/Death_Knight"
+  ],
+  "Ulic": [
+   "https://liquipedia.net/warcraft/Lich"
+  ],
+  "Udre": [
+   "https://liquipedia.net/warcraft/Dreadlord"
+  ],
+  "Ucrl": [
+   "https://liquipedia.net/warcraft/Crypt_Lord"
+  ],
+  "Edem": [
+   "https://liquipedia.net/warcraft/Demon_Hunter"
+  ],
+  "Ekee": [
+   "https://liquipedia.net/warcraft/Keeper_of_the_Grove"
+  ],
+  "Emoo": [
+   "https://liquipedia.net/warcraft/Priestess_of_the_Moon"
+  ],
+  "Ewar": [
+   "https://liquipedia.net/warcraft/Warden"
+  ],
+  "Nalc": [
+   "https://liquipedia.net/warcraft/Goblin_Alchemist"
+  ],
+  "Nbrn": [
+   "https://liquipedia.net/warcraft/Dark_Ranger"
+  ],
+  "Nbst": [
+   "https://liquipedia.net/warcraft/Beastmaster"
+  ],
+  "Nfir": [
+   "https://liquipedia.net/warcraft/Firelord"
+  ],
+  "Nngs": [
+   "https://liquipedia.net/warcraft/Naga_Sea_Witch"
+  ],
+  "Npbm": [
+   "https://liquipedia.net/warcraft/Pandaren_Brewmaster"
+  ],
+  "Nplh": [
+   "https://liquipedia.net/warcraft/Pit_Lord"
+  ],
+  "Ntin": [
+   "https://liquipedia.net/warcraft/Goblin_Tinker"
+  ],
+  "hmpr": [
+   "https://liquipedia.net/warcraft/Priest"
+  ],
+  "hsor": [
+   "https://liquipedia.net/warcraft/Sorceress"
+  ],
+  "hspt": [
+   "https://liquipedia.net/warcraft/Spell_Breaker"
+  ],
+  "oshm": [
+   "https://liquipedia.net/warcraft/Shaman"
+  ],
+  "odoc": [
+   "https://liquipedia.net/warcraft/Troll_Witch_Doctor"
+  ],
+  "ospm": [
+   "https://liquipedia.net/warcraft/Spirit_Walker"
+  ],
+  "unec": [
+   "https://liquipedia.net/warcraft/Necromancer"
+  ],
+  "uban": [
+   "https://liquipedia.net/warcraft/Banshee"
+  ],
+  "uobs": [
+   "https://liquipedia.net/warcraft/Obsidian_Statue"
+  ],
+  "edot": [
+   "https://liquipedia.net/warcraft/Druid_of_the_Talon"
+  ],
+  "edry": [
+   "https://liquipedia.net/warcraft/Dryad"
+  ],
+  "edoc": [
+   "https://liquipedia.net/warcraft/Druid_of_the_Claw"
+  ],
+  "efdr": [
+   "https://liquipedia.net/warcraft/Faerie_Dragon"
+  ],
+  "okod": [
+   "https://liquipedia.net/warcraft/Kodo_Beast"
+  ],
+  "ugar": [
+   "https://liquipedia.net/warcraft/Gargoyle"
+  ],
+  "ucry": [
+   "https://liquipedia.net/warcraft/Crypt_Fiend"
+  ],
+  "esen": [
+   "https://liquipedia.net/warcraft/Huntress"
+  ],
+  "earc": [
+   "https://liquipedia.net/warcraft/Archer"
+  ],
+  "hrif": [
+   "https://liquipedia.net/warcraft/Rifleman"
+  ],
+  "ohun": [
+   "https://liquipedia.net/warcraft/Troll_Headhunter"
+  ],
+  "hgyr": [
+   "https://liquipedia.net/warcraft/Flying_Machine"
+  ],
+  "hgry": [
+   "https://liquipedia.net/warcraft/Gryphon_Rider"
+  ],
+  "hdhw": [
+   "https://liquipedia.net/warcraft/Dragonhawk_Rider"
+  ],
+  "owyv": [
+   "https://liquipedia.net/warcraft/Wind_Rider"
+  ],
+  "otbr": [
+   "https://liquipedia.net/warcraft/Troll_Batrider"
+  ],
+  "ufro": [
+   "https://liquipedia.net/warcraft/Frost_Wyrm"
+  ],
+  "echm": [
+   "https://liquipedia.net/warcraft/Chimaera"
+  ],
+  "ehip": [
+   "https://liquipedia.net/warcraft/Hippogryph"
+  ],
+  "hmtm": [
+   "https://liquipedia.net/warcraft/Mortar_Team"
+  ],
+  "ocat": [
+   "https://liquipedia.net/warcraft/Demolisher"
+  ],
+  "umtw": [
+   "https://liquipedia.net/warcraft/Meat_Wagon"
+  ],
+  "ebal": [
+   "https://liquipedia.net/warcraft/Glaive_Thrower"
+  ],
+  "hkni": [
+   "https://liquipedia.net/warcraft/Knight"
+  ],
+  "ogru": [
+   "https://liquipedia.net/warcraft/Grunt"
+  ],
+  "otau": [
+   "https://liquipedia.net/warcraft/Tauren"
+  ],
+  "orai": [
+   "https://liquipedia.net/warcraft/Raider"
+  ],
+  "ugho": [
+   "https://liquipedia.net/warcraft/Ghoul"
+  ],
+  "uabo": [
+   "https://liquipedia.net/warcraft/Abomination"
+  ],
+  "emtg": [
+   "https://liquipedia.net/warcraft/Mountain_Giant"
+  ],
+  "hfoo": [
+   "https://liquipedia.net/warcraft/Footman"
+  ],
+  "hwat": [
+   "https://liquipedia.net/warcraft/Water_Elemental"
+  ]
+ }
+}

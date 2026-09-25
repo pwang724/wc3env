@@ -1,0 +1,60 @@
+{
+  "name": "staged",
+  "agent": "tests.e2e.scenarios.staged:StagedFight",
+  "max_ticks": 120,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "cheats": [],
+  "setup": [
+    {
+      "op": "spawn",
+      "type_id": "hfoo",
+      "player": 0,
+      "x": 4200.0,
+      "y": 2300.0,
+      "n": 12
+    },
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4100.0,
+      "y": 2500.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "ogru",
+      "player": 1,
+      "x": 3400.0,
+      "y": 2300.0,
+      "n": 12
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 1,
+      "x": 3600.0,
+      "y": 2500.0,
+      "n": 2
+    },
+    {
+      "op": "spawn",
+      "type_id": "ogru",
+      "player": 1,
+      "x": -4000.0,
+      "y": -2000.0,
+      "n": 6
+    },
+    {
+      "op": "item",
+      "type_id": "stwp",
+      "x": 4300.0,
+      "y": 2200.0
+    }
+  ],
+  "tick_seconds": 1.0,
+  "notes": "Staged fight for observation parity: 12 Footmen + an Archmage vs 12 Grunts + 2 Shamans next to the human base, 6 Grunts far away in the fog, a Town Portal on the ground. hfoo=1751543663 Hamg=1214344551 ogru=1869050485 oshm=1869834349 stwp=1937012592."
+}

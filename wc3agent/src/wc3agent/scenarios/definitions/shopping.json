@@ -1,0 +1,53 @@
+{
+  "title": "Buying items",
+  "minutes": 2,
+  "opponent": "computer",
+  "skip_seconds": 460,
+  "finish": {
+    "metric": "items_bought",
+    "op": ">=",
+    "value": 3
+  },
+  "goal": "Your hero stands next to your Arcane Vault with 1000 gold; you own a Keep and the Vault has just received its first stock. Buy three useful items from it.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 1000,
+      "lumber": 0
+    },
+    {
+      "op": "spawn",
+      "type": "hkee",
+      "at": "home",
+      "dx": -1400,
+      "dy": -900
+    },
+    {
+      "op": "spawn",
+      "type": "hvlt",
+      "at": "home",
+      "dx": -900,
+      "dy": -600
+    },
+    {
+      "op": "hero",
+      "type": "Hmkg",
+      "level": 2,
+      "at": "home",
+      "dx": -750,
+      "dy": -600,
+      "tag": "hero"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "items_bought",
+      "op": ">=",
+      "value": 3
+    }
+  ]
+}

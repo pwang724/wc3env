@@ -1,0 +1,31 @@
+{
+  "name": "opening_night_elf",
+  "agent": "tests.e2e.extended.scenarios.opening:Opening",
+  "params": {
+    "worker": "ewsp",
+    "hall": "etol",
+    "supply": "emow",
+    "production": "eaom",
+    "unit": "earc"
+  },
+  "max_ticks": 420,
+  "seed": 11,
+  "races": {
+    "0": "night_elf",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    }
+  ],
+  "notes": "night_elf: a worker builds supply and production with staged resources; production trains the first unit. Checks construct/train events and food."
+}

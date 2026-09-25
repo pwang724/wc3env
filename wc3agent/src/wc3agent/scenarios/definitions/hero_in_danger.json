@@ -1,0 +1,63 @@
+{
+  "title": "A hero about to die",
+  "minutes": 1.5,
+  "opponent": "attack",
+  "finish": {
+    "metric": "hero_alive",
+    "op": "==",
+    "value": false
+  },
+  "goal": "Your hero is badly hurt, carries a Potion of Healing and a Scroll of Town Portal, has unspent skill points, and enemies are on top of it with only two Footmen to help. Keep the hero alive.",
+  "setup": [
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 3,
+      "hp": 180,
+      "at": "toward:enemy_home:6000",
+      "tag": "hero",
+      "items": [
+        "phea",
+        "stwp"
+      ]
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 2,
+      "at": "toward:enemy_home:6000",
+      "dx": 120,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ogru",
+      "n": 4,
+      "at": "toward:enemy_home:5600",
+      "tag": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "items_used",
+      "op": ">=",
+      "value": 1
+    },
+    {
+      "metric": "unspent_skill_points",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "hero_health_percent",
+      "op": ">=",
+      "value": 40
+    }
+  ]
+}

@@ -1,0 +1,465 @@
+{
+ "about": "How each usable item is aimed, measured in the game by tools/scripts/measure_item_targets.py: none = used at once, unit = needs a target unit (which kind was accepted), point = needs a place. form null: no way of using it was accepted in the test (it may need a situation the test lacks, such as a corpse).",
+ "items": {
+  "amrc": {
+   "form": "point",
+   "name": "Amulet of Recall"
+  },
+  "arsc": {
+   "form": "none",
+   "name": "Arcane Scroll"
+  },
+  "axas": {
+   "form": "none",
+   "name": "Ancestral Staff"
+  },
+  "ccmd": {
+   "form": "unit",
+   "name": "Scepter of Mastery",
+   "target": "enemy"
+  },
+  "cosl": {
+   "form": null,
+   "name": "Celestial Orb of Souls",
+   "note": "no use accepted"
+  },
+  "crdt": {
+   "form": "unit",
+   "name": "Crown of the Deathlord",
+   "target": "enemy"
+  },
+  "crys": {
+   "form": "point",
+   "name": "Crystal Ball"
+  },
+  "desc": {
+   "form": "point",
+   "name": "Kelen's Dagger of Escape",
+   "target": "at own hall"
+  },
+  "dsum": {
+   "form": "point",
+   "name": "Diamond of Summoning",
+   "target": "at own hall"
+  },
+  "dtsb": {
+   "form": "unit",
+   "name": "Drek'thar's Spellbook",
+   "target": "own hall"
+  },
+  "dust": {
+   "form": "none",
+   "name": "Dust of Appearance"
+  },
+  "envl": {
+   "form": "none",
+   "name": "Enchanted Vial"
+  },
+  "esaz": {
+   "form": "none",
+   "name": "Essence of Aszune"
+  },
+  "fgdg": {
+   "form": "none",
+   "name": "Demonic Figurine"
+  },
+  "fgfh": {
+   "form": "none",
+   "name": "Spiked Collar"
+  },
+  "fgrd": {
+   "form": "none",
+   "name": "Red Drake Egg"
+  },
+  "fgrg": {
+   "form": "none",
+   "name": "Stone Token"
+  },
+  "fgsk": {
+   "form": "none",
+   "name": "Book of the Dead"
+  },
+  "fgun": {
+   "form": "point",
+   "name": "Flare Gun"
+  },
+  "gobm": {
+   "form": "unit",
+   "name": "Goblin Land Mines",
+   "target": "ally"
+  },
+  "grsl": {
+   "form": "none",
+   "name": "Grimoire of Souls"
+  },
+  "gsou": {
+   "form": null,
+   "name": "Soul Gem",
+   "note": "no use accepted"
+  },
+  "gvsm": {
+   "form": null,
+   "name": "Gloves of Spell Mastery",
+   "note": "no use accepted"
+  },
+  "hbth": {
+   "form": "none",
+   "name": "Helm of Battlethirst"
+  },
+  "hlst": {
+   "form": "none",
+   "name": "Health Stone"
+  },
+  "hslv": {
+   "form": "unit",
+   "name": "Healing Salve",
+   "target": "ally"
+  },
+  "infs": {
+   "form": "point",
+   "name": "Inferno Stone"
+  },
+  "lure": {
+   "form": null,
+   "name": "Monster Lure",
+   "note": "no use accepted"
+  },
+  "mcri": {
+   "form": "none",
+   "name": "Mechanical Critter"
+  },
+  "mnst": {
+   "form": "none",
+   "name": "Mana Stone"
+  },
+  "moon": {
+   "form": "none",
+   "name": "Moonstone"
+  },
+  "pams": {
+   "form": "none",
+   "name": "Anti-magic Potion"
+  },
+  "pclr": {
+   "form": "none",
+   "name": "Clarity Potion"
+  },
+  "pdiv": {
+   "form": "none",
+   "name": "Potion of Divinity"
+  },
+  "pghe": {
+   "form": "none",
+   "name": "Potion of Greater Healing"
+  },
+  "pgin": {
+   "form": "none",
+   "name": "Potion of Greater Invisibility"
+  },
+  "pgma": {
+   "form": "none",
+   "name": "Potion of Greater Mana"
+  },
+  "phea": {
+   "form": "none",
+   "name": "Potion of Healing"
+  },
+  "pinv": {
+   "form": "none",
+   "name": "Potion of Invisibility"
+  },
+  "plcl": {
+   "form": "none",
+   "name": "Lesser Clarity Potion"
+  },
+  "pman": {
+   "form": "none",
+   "name": "Potion of Mana"
+  },
+  "pnvl": {
+   "form": "none",
+   "name": "Potion of Lesser Invulnerability"
+  },
+  "pnvu": {
+   "form": "none",
+   "name": "Potion of Invulnerability"
+  },
+  "pomn": {
+   "form": "none",
+   "name": "Potion of Omniscience"
+  },
+  "pres": {
+   "form": "none",
+   "name": "Potion of Restoration"
+  },
+  "pspd": {
+   "form": "none",
+   "name": "Potion of Speed"
+  },
+  "rej1": {
+   "form": "none",
+   "name": "Minor Replenishment Potion"
+  },
+  "rej2": {
+   "form": "none",
+   "name": "Lesser Replenishment Potion"
+  },
+  "rej3": {
+   "form": "none",
+   "name": "Replenishment Potion"
+  },
+  "rej4": {
+   "form": "none",
+   "name": "Greater Replenishment Potion"
+  },
+  "rej5": {
+   "form": "none",
+   "name": "Lesser Scroll of Replenishment"
+  },
+  "rej6": {
+   "form": "none",
+   "name": "Greater Scroll of Replenishment"
+  },
+  "rnec": {
+   "form": "none",
+   "name": "Rod of Necromancy"
+  },
+  "rots": {
+   "form": "none",
+   "name": "Scepter of the Sea"
+  },
+  "sand": {
+   "form": "none",
+   "name": "Scroll of Animate Dead"
+  },
+  "sbok": {
+   "form": null,
+   "name": "Spell Book",
+   "note": "no use accepted"
+  },
+  "schl": {
+   "form": null,
+   "name": "Scepter of Healing",
+   "note": "no use accepted"
+  },
+  "scul": {
+   "form": "none",
+   "name": "Scroll of the Unholy Legion"
+  },
+  "sfog": {
+   "form": null,
+   "name": "Horn of the Clouds",
+   "note": "no use accepted"
+  },
+  "shar": {
+   "form": "none",
+   "name": "Ice Shard"
+  },
+  "shas": {
+   "form": "none",
+   "name": "Scroll of Speed"
+  },
+  "shea": {
+   "form": "none",
+   "name": "Scroll of Healing"
+  },
+  "shrs": {
+   "form": "none",
+   "name": "Shimmerglaze Roast"
+  },
+  "shtm": {
+   "form": "unit",
+   "name": "Shamanic Totem",
+   "target": "ally"
+  },
+  "silk": {
+   "form": null,
+   "name": "Spider Silk Broach",
+   "note": "no use accepted"
+  },
+  "skul": {
+   "form": "point",
+   "name": "Sacrificial Skull"
+  },
+  "sman": {
+   "form": "none",
+   "name": "Scroll of Mana"
+  },
+  "sneg": {
+   "form": "point",
+   "name": "Staff of Negation"
+  },
+  "spre": {
+   "form": "unit",
+   "name": "Staff of Preservation",
+   "target": "ally"
+  },
+  "spro": {
+   "form": "none",
+   "name": "Scroll of Protection"
+  },
+  "sreg": {
+   "form": "none",
+   "name": "Scroll of Regeneration"
+  },
+  "sres": {
+   "form": "none",
+   "name": "Scroll of Restoration"
+  },
+  "sror": {
+   "form": "none",
+   "name": "Scroll of the Beast"
+  },
+  "srrc": {
+   "assumed": true,
+   "form": "none",
+   "name": "Scroll of Resurrection"
+  },
+  "ssan": {
+   "form": "unit",
+   "name": "Staff of Sanctuary",
+   "target": "self"
+  },
+  "ssil": {
+   "form": "point",
+   "name": "Staff of Silence"
+  },
+  "stel": {
+   "form": "unit",
+   "name": "Staff of Teleportation",
+   "target": "ally"
+  },
+  "stpg": {
+   "form": "none",
+   "name": "Clockwork Penguin"
+  },
+  "stre": {
+   "form": "none",
+   "name": "Staff of Reanimation"
+  },
+  "stwp": {
+   "form": "unit",
+   "name": "Scroll of Town Portal",
+   "target": "own hall"
+  },
+  "tbak": {
+   "form": "unit",
+   "name": "Tiny Altar of Kings",
+   "target": "self"
+  },
+  "tbar": {
+   "assumed": true,
+   "form": "point",
+   "name": "Tiny Barracks"
+  },
+  "tbsm": {
+   "assumed": true,
+   "form": "point",
+   "name": "Tiny Blacksmith"
+  },
+  "tcas": {
+   "assumed": true,
+   "form": "point",
+   "name": "Tiny Castle"
+  },
+  "tfar": {
+   "assumed": true,
+   "form": "point",
+   "name": "Tiny Farm"
+  },
+  "tgrh": {
+   "assumed": true,
+   "form": "point",
+   "name": "Tiny Great Hall"
+  },
+  "tgxp": {
+   "form": null,
+   "name": "Tome of Greater Experience",
+   "note": "not given"
+  },
+  "thdm": {
+   "form": null,
+   "name": "Thunderlizard Diamond",
+   "note": "no use accepted"
+  },
+  "tkno": {
+   "form": null,
+   "name": "Tome of Power",
+   "note": "not given"
+  },
+  "tlum": {
+   "form": "unit",
+   "name": "Tiny Lumber Mill",
+   "target": "enemy"
+  },
+  "tmsc": {
+   "form": null,
+   "name": "Tome of Sacrifices",
+   "note": "no use accepted"
+  },
+  "totw": {
+   "form": "none",
+   "name": "Talisman of the Wild"
+  },
+  "tret": {
+   "assumed": true,
+   "form": "none",
+   "name": "Tome of Retraining"
+  },
+  "tsct": {
+   "assumed": true,
+   "form": "point",
+   "name": "Ivory Tower"
+  },
+  "vamp": {
+   "form": "none",
+   "name": "Vampiric Potion"
+  },
+  "wcyc": {
+   "form": "unit",
+   "name": "Wand of the Wind",
+   "target": "enemy"
+  },
+  "whwd": {
+   "form": "point",
+   "name": "Healing Wards"
+  },
+  "wild": {
+   "form": "none",
+   "name": "Amulet of the Wild"
+  },
+  "will": {
+   "form": "unit",
+   "name": "Wand of Illusion",
+   "target": "ally"
+  },
+  "wlsd": {
+   "form": "unit",
+   "name": "Wand of Lightning Shield",
+   "target": "ally"
+  },
+  "wneg": {
+   "form": "point",
+   "name": "Wand of Negation"
+  },
+  "wneu": {
+   "assumed": true,
+   "form": "unit",
+   "name": "Wand of Neutralization"
+  },
+  "woms": {
+   "form": "unit",
+   "name": "Wand of Mana Stealing",
+   "target": "enemy"
+  },
+  "wshs": {
+   "assumed": true,
+   "form": "unit",
+   "name": "Wand of Shadowsight"
+  },
+  "wswd": {
+   "form": "point",
+   "name": "Sentry Wards"
+  }
+ }
+}

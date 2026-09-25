@@ -1,0 +1,86 @@
+{
+  "title": "Spending a big bank and teching",
+  "minutes": 4,
+  "opponent": "computer",
+  "goal": "You start rich with a developed base. Spend it well: keep production buildings busy, start the Keep upgrade early, research upgrades, never sit on unspent gold, never get supply blocked.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 3000,
+      "lumber": 1500
+    },
+    {
+      "op": "spawn",
+      "type": "hbar",
+      "at": "home",
+      "dx": -700,
+      "dy": -500
+    },
+    {
+      "op": "spawn",
+      "type": "hbla",
+      "at": "home",
+      "dx": -700,
+      "dy": 100
+    },
+    {
+      "op": "spawn",
+      "type": "halt",
+      "at": "home",
+      "dx": -100,
+      "dy": -800
+    },
+    {
+      "op": "spawn",
+      "type": "hhou",
+      "n": 3,
+      "at": "home",
+      "dx": 500,
+      "dy": -800
+    },
+    {
+      "op": "spawn",
+      "type": "hpea",
+      "n": 5,
+      "at": "home",
+      "dx": 200,
+      "dy": 300
+    }
+  ],
+  "checks": [
+    {
+      "metric": "upgrade_started_time",
+      "op": "<=",
+      "value": 40
+    },
+    {
+      "metric": "units_trained",
+      "op": ">=",
+      "value": 12
+    },
+    {
+      "metric": "researches_done",
+      "op": ">=",
+      "value": 2
+    },
+    {
+      "metric": "average_unspent_gold",
+      "op": "<=",
+      "value": 1200
+    },
+    {
+      "metric": "supply_blocked_seconds",
+      "op": "<=",
+      "value": 20
+    },
+    {
+      "metric": "hero_time",
+      "op": "<=",
+      "value": 80
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Creeping a strong camp",
+  "minutes": 3.5,
+  "opponent": "computer",
+  "finish": "camp_cleared:camp:9",
+  "finish_after_seconds": 15,
+  "goal": "A level 3 Archmage, five Footmen and three Riflemen stand next to a strong camp. Clear it with few losses: focus targets, keep the hero alive, pull badly hurt units back, use the potion if needed, take the drops.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 3,
+      "at": "toward:camp:9:900",
+      "dx": 0,
+      "tag": "hero",
+      "items": [
+        "phea"
+      ]
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 5,
+      "at": "toward:camp:9:900",
+      "dx": 150,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "hrif",
+      "n": 3,
+      "at": "toward:camp:9:900",
+      "dx": -150,
+      "tag": "army"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "camp_cleared:camp:9",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 2
+    },
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "army_kept_percent",
+      "op": ">=",
+      "value": 60
+    },
+    {
+      "metric": "items_picked_up",
+      "op": ">=",
+      "value": 1
+    },
+    {
+      "metric": "unspent_skill_points",
+      "op": "<=",
+      "value": 0
+    }
+  ]
+}

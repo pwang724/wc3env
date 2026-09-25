@@ -1,0 +1,16 @@
+{
+  "_about": "Dollars per million tokens by model-name prefix. input = uncached prompt tokens, cached = prompt tokens served from cache, cache_write = prompt tokens written to cache (OpenAI reports these separately), output = completion tokens. Looked up 2026-09-21; edit when prices change.",
+  "_sources": [
+    "https://developers.openai.com/api/docs/pricing?latest-pricing=standard",
+    "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/",
+    "https://www.cloudzero.com/blog/gpt-6-pricing/",
+    "https://openrouter.ai/typesafe/jev-1.13",
+    "https://platform.claude.com/docs/en/about-claude/pricing (cache_write is the 5-minute rate, 1.25x input)"
+  ],
+  "gpt-5.6-luna": {"input": 0.20, "cached": 0.02, "cache_write": 0.20, "output": 1.20},
+  "gpt-6-luna": {"input": 0.10, "cached": 0.01, "cache_write": 0.125, "output": 0.50},
+  "gpt-6-astra": {"input": 10.0, "cached": 1.0, "cache_write": 12.5, "output": 50.0},
+  "claude-fable-5-1": {"input": 10.0, "cached": 0.25, "cache_write": 12.5, "output": 50.0},
+  "claude-opus-5-5": {"input": 4.0, "cached": 0.20, "cache_write": 5.0, "output": 20.0},
+  "jev": {"input": 0.042, "output": 0.0}
+}

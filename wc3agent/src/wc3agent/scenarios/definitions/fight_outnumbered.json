@@ -1,0 +1,70 @@
+{
+  "title": "Outnumbered: save the army",
+  "minutes": 2,
+  "opponent": "attack",
+  "goal": "An enemy army twice the size of yours is attacking your small army away from home. You cannot win this fight. Save the hero and as many units as you can: get back to your base (your hero carries a Scroll of Town Portal).",
+  "setup": [
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 3,
+      "at": "toward:enemy_home:6000",
+      "tag": "hero",
+      "items": [
+        "stwp",
+        "phea"
+      ]
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 4,
+      "at": "toward:enemy_home:6000",
+      "dx": 150,
+      "tag": "army"
+    },
+    {
+      "op": "hero",
+      "owner": "enemy",
+      "type": "Ofar",
+      "level": 5,
+      "at": "toward:enemy_home:4800",
+      "tag": "enemy"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ogru",
+      "n": 8,
+      "at": "toward:enemy_home:4800",
+      "dy": 200,
+      "tag": "enemy"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ohun",
+      "n": 5,
+      "at": "toward:enemy_home:4800",
+      "dy": -200,
+      "tag": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "army_kept_percent",
+      "op": ">=",
+      "value": 60
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 1
+    }
+  ]
+}

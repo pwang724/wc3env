@@ -1,0 +1,22 @@
+{
+  "name": "fog",
+  "agent": "tests.e2e.scenarios.fog:Fog",
+  "max_ticks": 60,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "cheats": [],
+  "setup": [
+    {
+      "op": "spawn",
+      "type_id": "ogru",
+      "player": 1,
+      "x": -4000.0,
+      "y": -2000.0,
+      "n": 6
+    }
+  ],
+  "tick_seconds": 1.0,
+  "notes": "Staged: enemy Grunts far from the base are invisible; a scout Footman spawned next to them reveals them; one dies in view; more spawn out of view; the scout dies and vision is lost."
+}

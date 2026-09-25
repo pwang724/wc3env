@@ -1,0 +1,5 @@
+include README.md LICENSE setup.py
+recursive-include hook *.c *.h *.bat *.md LICENSE LICENSE.txt
+recursive-include tests/native *.c
+recursive-include docs *.md *.json
+prune wc3hook/out

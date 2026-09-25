@@ -1,0 +1,68 @@
+{
+  "title": "Defending with Militia (Human)",
+  "race": "human",
+  "minutes": 2.5,
+  "opponent": "raid",
+  "goal": "Two Grunts and a Headhunter are raiding your Peasants; your only soldiers are two Footmen across the base. Human bases defend with the Town Hall: cast Call to Arms at the Town Hall so nearby Peasants turn into Militia, fight the raiders with the Militia and the Footmen right next to the hall, and once the raiders are dead cast Back to Work at the Town Hall so everyone mines again (Militia lasts 45 seconds).",
+  "setup": [
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 2,
+      "at": "home",
+      "dx": -1400,
+      "dy": -900,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "ogru",
+      "n": 2,
+      "at": "home",
+      "dx": 800,
+      "dy": 300,
+      "owner": "enemy"
+    },
+    {
+      "op": "spawn",
+      "type": "ohun",
+      "n": 1,
+      "at": "home",
+      "dx": 900,
+      "dy": 300,
+      "owner": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "present_seconds:hmil",
+      "op": ">=",
+      "value": 10
+    },
+    {
+      "metric": "count:hmil",
+      "op": "==",
+      "value": 0
+    },
+    {
+      "metric": "workers_lost",
+      "op": "<=",
+      "value": 2
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 3
+    }
+  ]
+}

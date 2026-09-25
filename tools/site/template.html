@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warcraft III RL Environment</title>
+<meta name="description" content="wc3env turns the real Warcraft III into a gym-style environment, and an LLM agent plays full games on it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --sunk: #f4f4f3; --ink: #17171a; --muted: #6a6a72; --faint: #9a9aa2;
+    --line: #e6e5e1; --accent: #c2410c; --accent-soft: #fbeee6; --blue: #2563eb; --bar: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+  .wide { max-width: 1080px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+  .inner { max-width: 680px; margin-left: auto; margin-right: auto; }
+  header { padding-top: 72px; padding-bottom: 8px; }
+  .kicker { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 16px; font-weight: 700; }
+  .lede { font-size: 19px; line-height: 1.55; color: var(--muted); margin: 0 0 20px; }
+  .links { display: flex; gap: 18px; flex-wrap: wrap; font-size: 14px; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  section { padding-top: 48px; padding-bottom: 8px; }
+  h2 { font-size: 24px; letter-spacing: -.01em; margin: 0 0 12px; font-weight: 700; }
+  h3 { font-size: 17px; margin: 28px 0 6px; font-weight: 600; }
+  p { margin: 0 0 14px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; }
+  code { font-size: .88em; background: var(--sunk); padding: 1px 5px; border-radius: 4px; }
+
+  /* videos */
+  .player { background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 1920 / 816; }
+  .player video { width: 100%; height: 100%; display: block; }
+  .tabs { display: flex; gap: 6px; margin: 0 0 12px; flex-wrap: wrap; }
+  .tabs button { font: 500 14px Inter, sans-serif; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected="true"] { color: var(--ink); background: var(--surface); border-color: var(--ink); }
+  .caption { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 44px; }
+
+  /* diagram */
+  figure { margin: 18px 0 10px; }
+  .diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: Inter, sans-serif; fill: var(--ink); }
+  .diagram .sub { fill: var(--muted); font-size: 12px; }
+  .diagram .box { fill: var(--sunk); stroke: var(--line); }
+  .diagram .hot { fill: var(--accent-soft); stroke: var(--accent); }
+  .diagram .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .label { fill: var(--muted); font-size: 12px; }
+  .diagram .proc { fill: var(--sunk); }
+  .diagram .card { fill: var(--surface); stroke: var(--line); }
+  .diagram .card.accent { stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .t { font-size: 15px; font-weight: 600; }
+  .diagram .cap { font-size: 10.5px; letter-spacing: .08em; fill: var(--faint); font-weight: 600; }
+  .diagram .tip { fill: var(--muted); }
+  .codebox { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 18px 0; background: #fafafa; }
+  .codebar { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-bottom: 1px solid var(--line); background: #f4f4f3; }
+  .codebar span { width: 10px; height: 10px; border-radius: 50%; background: #dcdcd8; }
+  .codebar em { font: 500 12px "JetBrains Mono", monospace; font-style: normal; color: var(--faint); margin-left: 8px; }
+  .codebox pre.code { margin: 0; background: transparent; border-radius: 0; padding: 16px 18px; font-size: 13.5px; line-height: 1.7; color: #24292f; white-space: pre; overflow-x: auto; }
+  .code .k { color: #cf222e; } .code .s { color: #1a7f37; } .code .f { color: #8250df; } .code .n { color: #0550ae; } .code .c { color: #6e7781; font-style: italic; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+  /* stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .stat { background: var(--surface); padding: 14px 16px; }
+  .stat b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .stat span { font-size: 13px; color: var(--muted); }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  /* decisions */
+  ol.decisions { list-style: none; counter-reset: d; padding: 0; margin: 10px 0 0; }
+  ol.decisions li { counter-increment: d; position: relative; padding: 14px 0 14px 40px; border-top: 1px solid var(--line); }
+  ol.decisions li::before { content: counter(d, decimal-leading-zero); position: absolute; left: 0; top: 16px; font: 500 13px "JetBrains Mono", monospace; color: var(--faint); }
+  ol.decisions b { display: block; margin-bottom: 2px; }
+  ol.decisions p { margin: 0; color: var(--muted); }
+
+  /* calls */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin: 10px 0; }
+  details > summary { cursor: pointer; list-style: none; padding: 12px 16px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 12px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; color: var(--faint); font-weight: 400; }
+  details[open] > summary::after { content: "−"; }
+  details > summary .meta { font-weight: 400; color: var(--faint); font-size: 13px; margin-left: auto; }
+  .body { padding: 0 16px 14px; }
+  .body p { font-size: 14px; color: var(--muted); }
+  pre { margin: 0; background: var(--sunk); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 460px; overflow: auto; }
+  .answer { list-style: none; padding: 0; margin: 0; font-size: 13.5px; }
+  .answer li { display: grid; grid-template-columns: 1fr 150px 44px; gap: 10px; align-items: center; padding: 4px 0; }
+  .answer .track { display: block; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden; }
+  .answer .fill { display: block; height: 100%; background: var(--bar); border-radius: 3px; }
+  .answer .pct { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .answer li.top { font-weight: 600; }
+  @media (max-width: 560px) { .answer li { grid-template-columns: 1fr 70px 40px; } }
+
+  /* breaks */
+  .breaks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card b { display: block; margin-bottom: 4px; }
+  .card p { font-size: 14px; color: var(--muted); margin: 0; }
+  @media (max-width: 760px) { .breaks { grid-template-columns: 1fr; } }
+  .timeline { border-left: 2px solid var(--line); margin: 14px 0; padding-left: 16px; }
+  .timeline div { margin: 8px 0; font-size: 15px; }
+  .timeline .t { font: 500 13px "JetBrains Mono", monospace; color: var(--accent); margin-right: 8px; }
+
+
+  /* parts */
+  .toc { display: flex; gap: 6px 22px; flex-wrap: wrap; font-size: 14px; margin-top: 4px; }
+  .toc a span { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; background: var(--sunk); color: var(--muted); font-size: 11px; font-weight: 600; margin-right: 7px; }
+  .part { margin-top: 36px; }
+  .part h2 { padding-top: 28px; border-top: 1px solid var(--line); }
+  .part span { font: 600 12px Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .part h2 { font-size: 30px; margin: 0; }
+  .date { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+  ul.support { padding-left: 20px; margin: 0 0 16px; }
+  ul.support li { margin: 6px 0; }
+  h3.sub-h { font-size: 20px; margin: 0 0 10px; }
+  h4 { font-size: 16px; margin: 26px 0 4px; font-weight: 600; }
+  pre.code { font-size: 13px; margin: 18px 0; max-height: none; }
+  .diagram .frame { fill: none; stroke: var(--line); stroke-dasharray: 4 4; }
+
+  table.compare, table.support { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 16px 0; }
+  table.compare th, table.compare td, table.support td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.compare th { font-weight: 600; font-size: 14px; }
+  table.vs td:nth-child(2) { color: var(--ink); }
+  table.vs td:nth-child(3) { color: var(--muted); }
+  table.vs td { font-size: 14px; }
+  table.compare th span { font-weight: 400; color: var(--faint); font-size: 12.5px; }
+  table.compare td:first-child, table.support td:first-child { color: var(--muted); white-space: nowrap; width: 1%; padding-right: 20px; }
+  table.support td { line-height: 1.55; }
+  .notes p { color: var(--ink); margin: 0 0 10px; }
+  ul.moments { list-style: none; padding: 0; margin: 0 0 16px; }
+  ul.moments li { display: flex; gap: 12px; align-items: baseline; padding: 5px 0; font-size: 15px; line-height: 1.55; }
+  ul.moments button { flex: none; font: 500 12.5px "JetBrains Mono", monospace; color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+  ul.moments button:hover { filter: brightness(.96); }
+  details .inner-d { margin: 8px 0; }
+  details .inner-d > summary { font-size: 14px; padding: 9px 14px; }
+  ul.parts { list-style: none; padding: 0; margin: 14px 0 18px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  ul.parts li + li { border-top: 1px solid var(--line); }
+  ul.parts details { border: 0; border-radius: 0; margin: 0; background: transparent; }
+  ul.parts details > summary { display: flex; justify-content: flex-start; align-items: center; gap: 10px; padding: 9px 14px; font-size: 14.5px; font-weight: 500; }
+  ul.parts details > summary b { font-weight: 500; }
+  ul.parts details > summary::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--faint); border-bottom: 1.5px solid var(--faint); transform: rotate(-45deg); transition: transform .15s; flex: none; }
+  ul.parts details[open] > summary::before { transform: rotate(45deg); }
+  ul.parts details > summary::after { content: none; }
+  ul.parts details > summary:hover { background: var(--sunk); }
+  ul.parts .body { padding: 0 14px 12px; }
+  ol.opts { list-style: none; margin: 0; padding: 4px 0; max-height: 460px; overflow: auto; background: var(--sunk); border-radius: 8px; counter-reset: o; }
+  ol.opts li { counter-increment: o; display: grid; grid-template-columns: 28px 1fr; column-gap: 6px; padding: 8px 14px 8px 8px; font-size: 13px; line-height: 1.5; }
+  ol.opts li + li { border-top: 1px solid var(--line); }
+  ol.opts li::before { content: counter(o); grid-row: span 2; text-align: right; color: var(--faint); font: 500 11.5px "JetBrains Mono", monospace; padding-top: 2px; }
+  ol.opts b { font: 500 12.5px "JetBrains Mono", monospace; color: var(--ink); }
+  ol.opts span { color: var(--muted); }
+  .codebox pre.wrapcode { white-space: pre-wrap; }
+  ul.answer { margin: 4px 0 18px; }
+  /* One size for all running text; only headings differ (code and diagram labels keep their own). */
+  header p, .date, figcaption, .caption, .notes p,
+  .card p { font-size: 16px; }
+  table.compare, table.compare th, table.compare td, table.support td, table.vs td { font-size: 14px; }
+  header p { line-height: 1.65; }
+  ul.parts details > summary { font-size: 14px; }
+  .small { font-size: 14px; line-height: 1.55; }
+  ul.moments li { font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .meta-links { margin: -4px 0 20px; font-size: 16px; }
+  footer { margin: 56px 0 0; padding: 22px 0 60px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <p class="date">Peter Wang and Nico Christie · September 25, 2026</p>
+  <h1>Warcraft III as an RL environment</h1>
+  <p class="meta-links"><a href="https://github.com/pwang724/wc3env">Code on GitHub</a></p>
+  <p>StarCraft has received a lot of research love over the past decade (<a href="https://github.com/Blizzard/s2client-proto">s2client-proto</a>, <a href="https://github.com/google-deepmind/pysc2">PySC2</a> and <a href="https://deepmind.google/discover/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/">AlphaStar</a>, to name a few), but Warcraft III, the game that filled my childhood with magic and wonder, has been rendered frozen in Northrend. So Nico and I present <a href="https://github.com/pwang724/wc3env">wc3env</a>, an open-source gym environment for Warcraft III: The Frozen Throne.</p>
+  <p>With the release of <a href="https://docs.typesafe.ai/">Jev</a>, I also spent the last three days asking how well a frontier language model (<a href="https://www.anthropic.com/claude/opus">Opus 5.5</a>), when paired with a fast, smart-ish zero-shot classifier (Jev), can play a real-time strategy game. While Jev is surprisingly good at isolated fights, Opus+Jev fail in free-form 1v1 matches. I'll go through why below.</p>
+</header>
+
+<div class="part wrap" id="env"><h2>The environment</h2></div>
+
+<section class="wrap" style="padding-top:16px">
+  <p>Blizzard never open-sourced the Warcraft III engine, and writing an open engine that behaves exactly like the original would be a far bigger project. So wc3env works on the real game. It injects a small DLL into Warcraft III (the 1.29.2 Legacy build) before the game runs its first instruction. Using about 90 known addresses inside that exact executable, the DLL detours the game's own functions through its code, which lets it freeze and advance the game clock, read every unit's state, and issue orders exactly as a player's clicks would. Python talks to it over a local pipe. Of course, an official API from Blizzard would be preferable, but this is more than performant enough to run experiments and train on (see the comparison with PySC2 below).</p>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 680 160" role="img" aria-label="Your Python agent sends actions to wc3hook.dll inside the Warcraft III process and gets observations back; the hook drives the unmodified game engine.">
+        <defs><marker id="ah1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" class="tip"/></marker></defs>
+        <rect class="proc" x="250" y="8" width="428" height="144" rx="14"/>
+        <text x="270" y="32" class="cap">WARCRAFT III PROCESS</text>
+        <rect class="card" x="2" y="48" width="168" height="72" rx="10"/>
+        <text x="86" y="80" text-anchor="middle" class="t">Your agent</text>
+        <text x="86" y="100" text-anchor="middle" class="sub">Python</text>
+        <rect class="card accent" x="270" y="48" width="168" height="72" rx="10"/>
+        <text x="354" y="80" text-anchor="middle" class="t">wc3hook.dll</text>
+        <text x="354" y="100" text-anchor="middle" class="sub">clock · state · orders</text>
+        <rect class="card" x="490" y="48" width="168" height="72" rx="10"/>
+        <text x="574" y="80" text-anchor="middle" class="t">Game engine</text>
+        <text x="574" y="100" text-anchor="middle" class="sub">unmodified</text>
+        <line class="arrow" x1="172" y1="72" x2="266" y2="72" marker-end="url(#ah1)"/>
+        <text x="219" y="63" text-anchor="middle" class="label">actions</text>
+        <line class="arrow" x1="268" y1="96" x2="174" y2="96" marker-end="url(#ah1)"/>
+        <text x="219" y="113" text-anchor="middle" class="label">observation</text>
+        <line class="arrow" x1="440" y1="84" x2="486" y2="84" marker-end="url(#ah1)"/>
+      </svg>
+    </div>
+  </figure>
+  <p>Like other <a href="https://gymnasium.farama.org/">gym environments</a>, you step it with an action (which can be empty) and get back an observation:</p>
+  <div class="codebox"><div class="codebar"><span></span><span></span><span></span><em>step.py</em></div><pre class="code"><span class="k">from</span> wc3env <span class="k">import</span> <span class="f">GameConfig</span>, <span class="f">WC3Env</span>
+
+<span class="k">with</span> <span class="f">WC3Env</span>(<span class="f">GameConfig</span>(map=<span class="s">&quot;(2)EchoIsles.w3x&quot;</span>, step_ms=<span class="n">1000</span>)) <span class="k">as</span> env:
+    obs = env.<span class="f">reset</span>()
+    <span class="c"># find a Peasant (type id hpea) and move it 400 units west</span>
+    peasant = <span class="f">next</span>(u <span class="k">for</span> u <span class="k">in</span> obs[<span class="s">&quot;units&quot;</span>] <span class="k">if</span> u[<span class="s">&quot;type_id&quot;</span>] == <span class="s">&quot;hpea&quot;</span>)
+    move = {<span class="s">&quot;unit_id&quot;</span>: peasant[<span class="s">&quot;unit_id&quot;</span>], <span class="s">&quot;command&quot;</span>: <span class="s">&quot;move&quot;</span>,
+            <span class="s">&quot;arguments&quot;</span>: {<span class="s">&quot;x&quot;</span>: peasant[<span class="s">&quot;x&quot;</span>] - <span class="n">400</span>, <span class="s">&quot;y&quot;</span>: peasant[<span class="s">&quot;y&quot;</span>]}}
+    obs, done, info = env.<span class="f">step</span>([move])  <span class="c"># advance one second of game time</span></pre></div>
+  <p>An observation is exactly what a human player can see, fog of war included: every visible unit with its buffs, full detail on your own (orders, cooldowns, items), resources, and the events since the last step. Actions are also what a human player does: move, attack, build, train, research, learn a hero skill, cast, use, drop or buy an item, and revive a hero. Together they cover almost all of Warcraft III. There's no built-in reward yet, so you have to define your own. Terrain and pathing are not observed, because building placement and unit pathing are both left to the game engine.</p>
+  <p>How it compares with StarCraft II's API and PySC2:</p>
+  <table class="compare vs">
+    <thead><tr><th></th><th>wc3env</th><th>PySC2 / s2client-proto</th></tr></thead>
+    <tbody>
+      <tr><td>API</td><td><code>WC3Env</code> (<code>reset</code>, <code>step</code>); <code>GameSession</code> for several agents on one clock; <code>StepPool</code> for many games</td><td><code>SC2Env</code> (<code>reset</code>, <code>step</code>)</td></tr>
+      <tr><td>Agents per game</td><td>2 to 8 tested, plus built-in AI at easy, normal or insane</td><td>1 or 2, plus built-in AI; two agents means two game processes</td></tr>
+      <tr><td>Concurrency</td><td>One process per game, any number of agents inside it. 4 games: 41× real time in total; 8 games: 73×</td><td>One process per agent. 2 games: 82× in total; 4 games: 128×; 8 games did not fit in 16 GB of memory</td></tr>
+      <tr><td>Speed</td><td>15× real time for one game, frozen between steps; real-time mode too</td><td>43× real time for one game; real-time mode too</td></tr>
+      <tr><td>Launch</td><td>3–7 s to a playable game</td><td>15–24 s</td></tr>
+      <tr><td>Observations</td><td>Raw unit state behind fog of war; no terrain or pixels</td><td>Raw units, feature layers or rendered RGB pixels, including terrain</td></tr>
+      <tr><td>Rendering</td><td>On or off; windows stay in the background</td><td>Headless on Linux, with hardware or software rendering</td></tr>
+      <tr><td>Resets</td><td>1.7 s, inside the running process; a fresh process every 32 episodes</td><td>3.7 s</td></tr>
+      <tr><td>Seeds and replays</td><td>Seeded games end in the same state every run; native <code>.w3g</code> replays</td><td>Seeded games end in the same state every run; replays need the exact game version</td></tr>
+      <tr><td>Memory</td><td>About 225 MB per game</td><td>1.4–1.7 GB per game</td></tr>
+      <tr><td>Linux</td><td>Wine in Docker</td><td>Official headless builds</td></tr>
+      <tr><td>Game versions</td><td>One build: Legacy TFT 1.29.2</td><td>Many; Linux packages ship past versions</td></tr>
+      <tr><td>Official</td><td>No: an injected DLL, offline only</td><td>Yes: Blizzard and DeepMind</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Limit: you need your own licensed copy of the game. The repository contains no game files, and it is offline only. Both columns were measured on the same laptop (Intel Core Ultra 5 325, 8 cores, 16 GB) with the same test: an idle agent against the hardest non-cheating built-in AI (Warcraft III insane on Echo Isles, StarCraft II very hard on Simple96), rendering off, one-second steps, five game minutes, raw observations only. StarCraft II ran through PySC2 4.0 on game version 5.0.16. More in the <a href="https://github.com/pwang724/wc3env/blob/main/docs/architecture.md">architecture notes</a>.</p>
+</section>
+
+<!-- ============ PART 2 ============ -->
+<div class="part wrap" id="agent"><h2>The agent</h2></div>
+
+<section class="wrap" style="padding-top:16px">
+  <h3 class="sub-h">The good: Jev in a straight fight</h3>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 680 176" role="img" aria-label="wc3env sends unit state to a question builder in code, which sends a question with legal options to Jev; Jev's top choice goes back to the game as an order.">
+        <defs><marker id="ah2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" class="tip"/></marker></defs>
+        <rect class="card" x="2" y="20" width="168" height="72" rx="10"/>
+        <text x="86" y="52" text-anchor="middle" class="t">wc3env</text>
+        <text x="86" y="72" text-anchor="middle" class="sub">the fight, every step</text>
+        <rect class="card" x="256" y="20" width="168" height="72" rx="10"/>
+        <text x="340" y="52" text-anchor="middle" class="t">Question builder</text>
+        <text x="340" y="72" text-anchor="middle" class="sub">code · legal options</text>
+        <rect class="card accent" x="510" y="20" width="168" height="72" rx="10"/>
+        <text x="594" y="52" text-anchor="middle" class="t">Jev</text>
+        <text x="594" y="72" text-anchor="middle" class="sub">a probability per option</text>
+        <line class="arrow" x1="172" y1="56" x2="252" y2="56" marker-end="url(#ah2)"/>
+        <text x="212" y="47" text-anchor="middle" class="label">unit state</text>
+        <line class="arrow" x1="426" y1="56" x2="506" y2="56" marker-end="url(#ah2)"/>
+        <text x="466" y="47" text-anchor="middle" class="label">per unit type</text>
+        <polyline class="arrow" points="594,94 594,140 86,140 86,98" marker-end="url(#ah2)"/>
+        <text x="340" y="160" text-anchor="middle" class="label">the top choice is issued as an order, ~0.3 s later</text>
+      </svg>
+    </div>
+  </figure>
+  <p>Jev doesn't take images, so we turn game state into text that is compact, clear and agent-friendly. About once a second, each unit type in the fight gets one request, with a question for each of its units (every hero is its own type). A request has four parts (see below for the Far Seer):</p>
+  <ul class="parts">
+    <li><details><summary><b>General rules shared by all units</b></summary><div class="body"><pre>{{MICRO_RULES}}</pre></div></details></li>
+    <li><details><summary><b>Unit guidance</b></summary><div class="body"><pre>{{MICRO_GUIDANCE}}</pre></div></details></li>
+    <li><details><summary><b>State of battle</b></summary><div class="body"><pre>{{MICRO_STATE}}</pre></div></details></li>
+    <li><details><summary><b>Possible actions</b></summary><div class="body"><ol class="opts">{{MICRO_OPTIONS}}</ol></div></details></li>
+  </ul>
+  <p>The highest-probability option is chosen and sent to the game as an order. Most of the context engineering went into how the state of battle is featurized. For example, each unit's health comes with how much it lost in the last five seconds and which enemies hit it, and each attack option states the target's role, its distance, and how many of our units already attack it. Jev is not perfect and has a limited understanding of Warcraft, so we also introduce some fixed rules that are handled in code instead of by Jev, like computing a priority list of deserving units for healing, or automatically picking up close-by items.</p>
+  <p>To test how well Jev micros, I pitted it against the game's own computer control, with identical armies for each race. As you can see below, Jev won all the duels, and usually it was not close. These were typical rounds, not cherry-picked. Sampled highlights are bookmarked below, and the panel in each video shows every unit's current action for closer inspection. While not close to a pro gamer's level, I was impressed.</p>
+</section>
+
+<section class="wide" id="duels" style="padding-top:8px">
+  <div class="inner">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-v="human">Human</button>
+      <button role="tab" aria-selected="false" data-v="orc">Orc</button>
+      <button role="tab" aria-selected="false" data-v="nightelf">Night Elf</button>
+      <button role="tab" aria-selected="false" data-v="undead">Undead</button>
+    </div>
+    <div class="notes"></div>
+  </div>
+  <div class="player"><video controls preload="metadata" playsinline></video></div>
+</section>
+
+<section class="wrap">
+  <h3 class="sub-h">The bad: full games</h3>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 680 236" role="img" aria-label="wc3env sends a text report to Claude every few seconds; Claude sends economy orders back and gives groups and objectives to Jev; Jev exchanges unit state and orders with wc3env several times a second.">
+        <defs><marker id="ah3" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" class="tip"/></marker></defs>
+        <rect class="card" x="2" y="20" width="168" height="196" rx="10"/>
+        <text x="86" y="112" text-anchor="middle" class="t">wc3env</text>
+        <text x="86" y="132" text-anchor="middle" class="sub">real time</text>
+        <rect class="card" x="400" y="20" width="278" height="72" rx="10"/>
+        <text x="539" y="52" text-anchor="middle" class="t">Macro (Opus 5.5)</text>
+        <text x="539" y="72" text-anchor="middle" class="sub">the whole game, every ~7 s</text>
+        <rect class="card accent" x="400" y="144" width="278" height="72" rx="10"/>
+        <text x="539" y="176" text-anchor="middle" class="t">Micro (Jev)</text>
+        <text x="539" y="196" text-anchor="middle" class="sub">one call per unit type, ~1 per second</text>
+        <line class="arrow" x1="172" y1="44" x2="396" y2="44" marker-end="url(#ah3)"/>
+        <text x="285" y="36" text-anchor="middle" class="label">text report</text>
+        <line class="arrow" x1="398" y1="68" x2="174" y2="68" marker-end="url(#ah3)"/>
+        <text x="285" y="84" text-anchor="middle" class="label">build, train, research</text>
+        <line class="arrow" x1="539" y1="94" x2="539" y2="140" marker-end="url(#ah3)"/>
+        <text x="548" y="122" class="label">groups + objectives</text>
+        <line class="arrow" x1="172" y1="168" x2="396" y2="168" marker-end="url(#ah3)"/>
+        <text x="285" y="160" text-anchor="middle" class="label">unit state</text>
+        <line class="arrow" x1="398" y1="192" x2="174" y2="192" marker-end="url(#ah3)"/>
+        <text x="285" y="208" text-anchor="middle" class="label">unit orders</text>
+      </svg>
+    </div>
+  </figure>
+  <p>For full games, Opus 5.5 serves as the macro brain that controls the economy, the build order, neutral creeping, scouting and, of course, when to fight and when to leave. It runs at the latency of Opus, which is roughly one turn every 7 seconds. When combat is needed, Opus puts units into groups and hands each group off to Jev to control, with a clear objective.</p>
+  <p>Each Opus turn has three parts (see below for a Macro call):</p>
+  <ul class="parts">
+    <li><details><summary><b>System prompt</b></summary><div class="body"><pre>{{MACRO_SYSTEM}}</pre></div></details></li>
+    <li><details><summary><b>Observation</b></summary><div class="body"><pre>{{MACRO_OBS}}</pre></div></details></li>
+    <li><details><summary><b>Output</b></summary><div class="body"><pre>{{MACRO_REPLY}}</pre></div></details></li>
+  </ul>
+  <p>A game costs about $5 against Warcraft's Insane AI. It loses, and often it is painful for me to watch. See the blunders below.</p>
+</section>
+
+<section class="wide" id="blunders" style="padding-top:8px">
+  <div class="inner">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-v="base">Into the enemy base</button>
+      <button role="tab" aria-selected="false" data-v="towers">Into the towers</button>
+    </div>
+    <div class="notes"></div>
+  </div>
+  <div class="player"><video controls preload="metadata" playsinline></video></div>
+</section>
+
+<section class="wrap">
+  <p>The failures can be attributed to several fundamental issues.</p>
+  <h4>Intelligence and knowledge</h4>
+  <p>Opus' decisions are often sensible but wrong: dishing out damage on creeps but wasting mana doing so, creeping too often instead of engaging the enemy, sacrificing units to protect heroes when both could live. These suggest a fairly naive view of Warcraft III. The solution is not prompting, since prescriptive advice tends to fail in the many scenarios nobody foresaw.</p>
+  <p>Moreover, decision quality appears to degrade when there are more than 10 prior observation-action pairs in context. This creates a tension. Keeping more turns gives Opus more context, but also more accumulated "diffs" to reason through, and its decisions get worse. Keeping fewer turns gives it a clearer head, but it loses track of what it set in motion. For example, it often forgets that Peasants turned into Militia should go back to their posts once a fight is done. Better context engineering may ameliorate this, but fundamentally the tension exists because Opus is not smart enough to reason about states through accumulated diffs. I have often had similar frustrations with coding agents after a file has accumulated many changes (I often just ask the agent to reread it), but games take this problem to a whole new level.</p>
+  <p>Jev suffers from the same issues. It takes in a very limited number of tokens, doesn't do well with larger contexts, and often makes suboptimal choices, especially when the right choice depends on history. For example, a unit will often attack one target, step back, attack another and move again, even when prompted to not switch targets often.</p>
+  <h4>Space and time</h4>
+  <p>There is no substitute for spatial intelligence. Terrain, pathing and army formations are crucial variables in fights and are in constant flux, so battle decisions must take them into account and be recomputed every second. Neither Opus nor Jev can parse visual input well (if at all), especially with many prior frames in its context. And even if Opus could, it would be too slow.</p>
+  <p>My guess is that a generalist language model would need to see the battlefield directly, decide in under a second, and reason well over the last 10 to 20 frames, all at once.</p>
+</section>
+
+<section class="wrap">
+  <h3 class="sub-h">What's next</h3>
+  <p>RTS games like Warcraft III are interesting benchmarks for general models because they combine long-term planning, hidden information and spatial reasoning, with time as a crucial factor, much like how decisions are made in the real world. The second direction is RL on top of an LLM. AlphaStar learned from up to 200 years of real-time play per agent, but starting from a model that already understands the rules might need far less.</p>
+</section>
+
+
+<footer class="wrap">
+  Warcraft III is a trademark of Blizzard Entertainment; this project is not affiliated with Blizzard.
+</footer>
+
+<script>
+  // Moments in each duel video, by video time in seconds; clicking one jumps there.
+  const duels = {
+    human: {
+      moments: [
+        [0, "At contact, the Mountain King Storm Bolts the enemy Archmage, one Sorceress Slows the lead enemy Knight, and each Sorceress Polymorphs a Knight."],
+        [8, "The Spell Breaker casts Control Magic on the enemy's Water Elemental, a cheap steal at 96 of 900 HP."],
+        [10, "A second Storm Bolt on the enemy Archmage, and the Mountain King, a Knight, the Mortar Team and our Archmage all attack it. It dies at 0:19."],
+        [20, "The Mountain King turns its Storm Bolt on the enemy Mountain King."]
+      ]
+    },
+    orc: {
+      moments: [
+        [0, "The opening: Chain Lightning, both Raiders Ensnare an enemy Raider, the Spirit Walker links the Tauren, and both Shamans Bloodlust it."],
+        [28, "Both enemy Witch Doctors and a Shaman fall within a second of each other, at 0:31."],
+        [44, "The enemy Far Seer runs at 177 of 675 HP. Both Raiders Ensnare it, at 0:47 and 0:52, and it dies at 0:57."]
+      ]
+    },
+    nightelf: {
+      moments: [
+        [0, "The Mountain Giant Taunts, the Druids of the Claw Roar and shift into bears, and a Druid of the Talon casts Cyclone."],
+        [11, "The Demon Hunter Mana Burns the enemy Priestess of the Moon at 0:13, and our Priestess finishes her with Searing Arrows at 0:16."],
+        [25, "A Druid of the Claw casts Rejuvenation on our Demon Hunter at 119 of 800 HP. He survives the fight."],
+        [50, "The enemy Demon Hunter, hit by our Priestess's Searing Arrows on and off since 0:26, falls at 0:53."]
+      ]
+    },
+    undead: {
+      moments: [
+        [0, "The Necromancers put Unholy Frenzy on both heroes, a Banshee shields our Lich with Anti-magic Shell, and the Crypt Fiends Web the Gargoyles out of the sky."],
+        [7, "The enemy Lich is the first hero down, at 0:10."],
+        [18, "The Death Knight throws Death Coil at a Banshee on 13 of 365 HP. A fraction too late: it dies anyway."],
+        [37, "The Lich sacrifices a Skeletal Mage for mana with Dark Ritual. At 0:43 the Death Knight heals our hurt Lich with Death Coil while the Lich Frost Novas the enemy Death Knight, who dies at 0:45."]
+      ]
+    }
+  };
+  const blunders = {
+    base: {
+      moments: [
+        [1, "Camp 5 is cleared. Opus sends the whole army to scout the enemy base, attack-moving into it."],
+        [12, "The army stands next to five enemy Burrows. Opus decides it can take \"the lone Grunt and the Peons\" and will pull back if the enemy army returns stronger."],
+        [20, "The enemy army comes home: two Blademasters, five Grunts and a Demolisher, and we are fighting under their Burrows."],
+        [30, "We are losing, with the Tauren Chieftain at 192 HP. Opus calls a Town Portal home."],
+        [39, "Nine seconds later the portal still hasn't gone off: a retreat order overrode its channel. The Chieftain dies before the army gets out."]
+      ]
+    },
+    towers: {
+      moments: [
+        [1, "On the way to creep, the army is strung out: the Shadow Hunter is about 1,800 units ahead of the Far Seer."],
+        [11, "It runs into the enemy's expansion: two Watch Towers, two Burrows and an enemy army that is clearly stronger."],
+        [20, "Opus orders a retreat, and the heroes and Headhunters leave. But Jev has the Grunts turn and attack a Blademaster, and they keep at it for ten seconds as a rearguard nobody asked for. Two Grunts and a Headhunter die."],
+        [49, "The Shadow Hunter stands at 157 HP with a Blademaster right next to it, still keeping its last order."],
+        [73, "Both Raiders die too, but that one is on Opus: it told them to stay behind and screen the Shadow Hunter. Instead of Ensnaring the chasing Blademaster as asked, Jev has them fight the enemy Shadow Hunter."]
+      ]
+    }
+  };
+  const clock = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  function player(section, data, prefix, first) {
+    const video = section.querySelector("video"), notes = section.querySelector(".notes"), tabs = section.querySelectorAll(".tabs button");
+    function seek(t) {
+      // Seeking before the video knows its length is ignored, so wait for that first.
+      const go = () => { video.currentTime = t; video.play().catch(() => {}); };
+      if (video.readyState >= 1) go(); else video.addEventListener("loadedmetadata", go, { once: true });
+    }
+    function show(key, play) {
+      tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.v === key));
+      video.poster = "media/" + prefix + key + ".jpg";
+      video.src = "media/" + prefix + key + ".mp4";
+      notes.innerHTML = "<ul class=\"moments\">" +
+        data[key].moments.map(([t, text]) => "<li><button data-t=\"" + t + "\">" + clock(t) + "</button><span>" + text + "</span></li>").join("") + "</ul>";
+      notes.querySelectorAll("button[data-t]").forEach(b => b.addEventListener("click", () => seek(Number(b.dataset.t))));
+      if (play) video.play().catch(() => {});
+    }
+    tabs.forEach(b => b.addEventListener("click", () => show(b.dataset.v, true)));
+    show(first, false);
+  }
+  player(document.getElementById("duels"), duels, "duel-", "human");
+  player(document.getElementById("blunders"), blunders, "blunder-", "base");
+</script>
+</body>
+</html>

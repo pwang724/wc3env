@@ -1,0 +1,30 @@
+{
+  "name": "cast_refusals",
+  "agent": "tests.e2e.extended.scenarios.cast_refusals:CastRefusals",
+  "max_ticks": 60,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "notes": "Casting without mana and during cooldown fires nothing and spends no mana; a control cast in between succeeds."
+}

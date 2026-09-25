@@ -1,0 +1,90 @@
+{
+  "title": "Defending with Ancients (Night Elf)",
+  "race": "nightelf",
+  "minutes": 2.5,
+  "opponent": "raid",
+  "goal": "Three Footmen and a Rifleman are raiding your Wisps; three Archers are across the base. Wisps cannot fight: move them behind the Tree of Life. Your buildings can fight: cast Uproot at the Ancient of War so it walks and attacks (cast Root when it is over), the Ancient Protector shoots on its own, and the Moon Well heals a hurt unit standing next to it (cast Replenish Mana and Life at the Moon Well on the unit). Bring the Archers back and fight beside the Ancient Protector and the Moon Well.",
+  "setup": [
+    {
+      "op": "spawn",
+      "type": "eaom",
+      "n": 1,
+      "at": "home",
+      "dx": 500,
+      "dy": -500,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "emow",
+      "n": 1,
+      "at": "home",
+      "dx": -500,
+      "dy": -500,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "etrp",
+      "n": 1,
+      "at": "home",
+      "dx": 0,
+      "dy": -800,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "earc",
+      "n": 3,
+      "at": "home",
+      "dx": -1400,
+      "dy": -900,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 3,
+      "at": "home",
+      "dx": 800,
+      "dy": 300,
+      "owner": "enemy"
+    },
+    {
+      "op": "spawn",
+      "type": "hrif",
+      "n": 1,
+      "at": "home",
+      "dx": 900,
+      "dy": 300,
+      "owner": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "uprooted_seconds",
+      "op": ">=",
+      "value": 10
+    },
+    {
+      "metric": "workers_lost",
+      "op": "<=",
+      "value": 1
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 1
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wc3env"
+version = "0.1.0"
+description = "A native Warcraft III environment with observations, actions and time control"
+requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "wc3hook/minhook/LICENSE.txt", "wc3hook/yyjson/LICENSE"]
+classifiers = ["Operating System :: Microsoft :: Windows", "Programming Language :: Python :: 3"]
+
+[project.optional-dependencies]
+tools = ["capstone>=5,<6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wc3env = ["native/*.dll"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["wc3hook", "build", "dist", "runs", "sessions", "assets", "runtime", "typesafe", "experiments"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501", "E731", "E741", "B007", "B008", "B023", "B905", "UP031"]  # formatter owns line length; the rest are style calls

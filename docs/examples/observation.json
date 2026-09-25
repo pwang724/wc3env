@@ -1,0 +1,528 @@
+{
+ "protocol_version": 1,
+ "observer": 0,
+ "players": [
+  {
+   "id": 0,
+   "kind": "player",
+   "relation": "self",
+   "team": 0,
+   "active": true,
+   "controller": "agent",
+   "shares_vision": true,
+   "shares_control": true
+  },
+  {
+   "id": 1,
+   "kind": "player",
+   "relation": "enemy",
+   "team": 1,
+   "active": true,
+   "controller": "computer",
+   "shares_vision": false,
+   "shares_control": false
+  },
+  {
+   "id": 12,
+   "kind": "neutral",
+   "relation": "enemy",
+   "team": 0,
+   "active": true,
+   "controller": "none",
+   "shares_vision": false,
+   "shares_control": false
+  },
+  {
+   "id": 13,
+   "kind": "neutral",
+   "relation": "ally",
+   "team": 0,
+   "active": true,
+   "controller": "none",
+   "shares_vision": false,
+   "shares_control": false
+  },
+  {
+   "id": 14,
+   "kind": "neutral",
+   "relation": "enemy",
+   "team": 0,
+   "active": true,
+   "controller": "none",
+   "shares_vision": false,
+   "shares_control": false
+  },
+  {
+   "id": 15,
+   "kind": "neutral",
+   "relation": "ally",
+   "team": 0,
+   "active": true,
+   "controller": "none",
+   "shares_vision": false,
+   "shares_control": false
+  }
+ ],
+ "map": {
+  "bounds": {
+   "min_x": -8192.0,
+   "min_y": -6144.0,
+   "max_x": 8192.0,
+   "max_y": 6144.0
+  }
+ },
+ "score": {
+  "units_trained": 9,
+  "units_killed": 0,
+  "structures_built": 1,
+  "structures_razed": 0,
+  "tech_percent": 0,
+  "food_max_produced": 12,
+  "food_max_used": 16,
+  "heroes_killed": 0,
+  "items_gained": 0,
+  "mercenaries_hired": 0,
+  "gold_mined": 0,
+  "gold_mined_upkeep": 0,
+  "gold_lost_upkeep": 0,
+  "gold_lost_tax": 0,
+  "gold_given": 0,
+  "gold_received": 0,
+  "lumber_total": 0,
+  "lumber_lost_upkeep": 0,
+  "lumber_lost_tax": 0,
+  "lumber_given": 0,
+  "lumber_received": 0,
+  "unit_total": 1895,
+  "hero_total": 0,
+  "resource_total": 0,
+  "total": 1895
+ },
+ "sequence": 1,
+ "game_time_seconds": 3.0,
+ "player": {
+  "gold": 500,
+  "lumber": 150,
+  "food_used": 14,
+  "food_cap": 12
+ },
+ "units": [
+  {
+   "unit_id": 15648,
+   "type_id": "Hamg",
+   "owner": 0,
+   "x": 5172.0,
+   "y": 2744.0,
+   "hp": 450,
+   "max_hp": 450,
+   "mana": 285,
+   "max_mana": 285,
+   "structure": false,
+   "hero": true,
+   "level": 1,
+   "order": null
+  },
+  {
+   "unit_id": 15686,
+   "type_id": "hfoo",
+   "owner": 0,
+   "x": 5168.0,
+   "y": 2672.0,
+   "hp": 420,
+   "max_hp": 420,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 12309,
+   "type_id": "hfoo",
+   "owner": 0,
+   "x": 5072.0,
+   "y": 2608.0,
+   "hp": 420,
+   "max_hp": 420,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15507,
+   "type_id": "hpea",
+   "owner": 0,
+   "x": 4898.0,
+   "y": 3257.75,
+   "hp": 220,
+   "max_hp": 220,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15485,
+   "type_id": "hpea",
+   "owner": 0,
+   "x": 4974.75,
+   "y": 3257.75,
+   "hp": 220,
+   "max_hp": 220,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15463,
+   "type_id": "hpea",
+   "owner": 0,
+   "x": 4872.25,
+   "y": 3331.25,
+   "hp": 220,
+   "max_hp": 220,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15441,
+   "type_id": "hpea",
+   "owner": 0,
+   "x": 5000.25,
+   "y": 3331.25,
+   "hp": 220,
+   "max_hp": 220,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15419,
+   "type_id": "hpea",
+   "owner": 0,
+   "x": 4936.25,
+   "y": 3385.75,
+   "hp": 220,
+   "max_hp": 220,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": false,
+   "hero": false,
+   "level": 0,
+   "order": null
+  },
+  {
+   "unit_id": 15388,
+   "type_id": "htow",
+   "owner": 0,
+   "x": 4672.0,
+   "y": 2944.0,
+   "hp": 1500,
+   "max_hp": 1500,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": true,
+   "hero": false,
+   "level": 0,
+   "order": null,
+   "state": null,
+   "state_seconds": 0.0,
+   "queue": [],
+   "queue_seconds": 0.0
+  }
+ ],
+ "visible_enemies": [
+  {
+   "unit_id": 12339,
+   "type_id": "ngol",
+   "owner": 15,
+   "x": 5120.0,
+   "y": 3584.0,
+   "hp": 150000,
+   "max_hp": 150000,
+   "mana": 0,
+   "max_mana": 0,
+   "structure": true,
+   "hero": false,
+   "level": 0
+  }
+ ],
+ "items": [
+  {
+   "item_id": 15140,
+   "type_id": "stwp",
+   "x": 4972.0,
+   "y": 3244.0
+  }
+ ],
+ "inventory": [
+  {
+   "unit_id": 15648,
+   "slot": 0,
+   "type_id": "phea",
+   "charges": 1
+  },
+  {
+   "unit_id": 15648,
+   "slot": 1,
+   "type_id": "stwp",
+   "charges": 1
+  }
+ ],
+ "events": [
+  {
+   "kind": "item_pickup",
+   "unit_id": 15648,
+   "item_id": 15483,
+   "type_id": "phea"
+  },
+  {
+   "kind": "item_pickup",
+   "unit_id": 15648,
+   "item_id": 15416,
+   "type_id": "stwp"
+  },
+  {
+   "kind": "death",
+   "unit_id": 15766,
+   "type_id": "hfoo",
+   "owner": 0
+  }
+ ],
+ "events_lost": 0,
+ "destructables": [
+  {
+   "id": 11611,
+   "type_id": "LTlt",
+   "x": 5568.0,
+   "y": 3840.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 11527,
+   "type_id": "LTlt",
+   "x": 4544.0,
+   "y": 3584.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9483,
+   "type_id": "LTlt",
+   "x": 5312.0,
+   "y": 2496.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9301,
+   "type_id": "LTlt",
+   "x": 4416.0,
+   "y": 3584.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9280,
+   "type_id": "LTlt",
+   "x": 4288.0,
+   "y": 3584.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9273,
+   "type_id": "LTlt",
+   "x": 4224.0,
+   "y": 3456.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9252,
+   "type_id": "LTlt",
+   "x": 4928.0,
+   "y": 2240.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9245,
+   "type_id": "LTlt",
+   "x": 4480.0,
+   "y": 3712.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9203,
+   "type_id": "LTlt",
+   "x": 5696.0,
+   "y": 3776.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9196,
+   "type_id": "LTlt",
+   "x": 5696.0,
+   "y": 3648.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9161,
+   "type_id": "LTlt",
+   "x": 4736.0,
+   "y": 3968.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9154,
+   "type_id": "LTlt",
+   "x": 5568.0,
+   "y": 3264.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9140,
+   "type_id": "LTlt",
+   "x": 5440.0,
+   "y": 3136.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9063,
+   "type_id": "LTlt",
+   "x": 5184.0,
+   "y": 4096.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9042,
+   "type_id": "LTlt",
+   "x": 4928.0,
+   "y": 4096.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 9035,
+   "type_id": "LTlt",
+   "x": 5056.0,
+   "y": 2496.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 7656,
+   "type_id": "LTlt",
+   "x": 5184.0,
+   "y": 2496.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 7558,
+   "type_id": "LTlt",
+   "x": 4608.0,
+   "y": 3712.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 6893,
+   "type_id": "LTlt",
+   "x": 5248.0,
+   "y": 2624.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 6088,
+   "type_id": "LTlt",
+   "x": 5568.0,
+   "y": 3392.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 4303,
+   "type_id": "LTlt",
+   "x": 5440.0,
+   "y": 2880.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 4226,
+   "type_id": "LTlt",
+   "x": 5376.0,
+   "y": 3008.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 4079,
+   "type_id": "LTlt",
+   "x": 5312.0,
+   "y": 2880.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  },
+  {
+   "id": 4037,
+   "type_id": "LTlt",
+   "x": 5312.0,
+   "y": 2752.0,
+   "hp": 50.0,
+   "resource": "lumber",
+   "invulnerable": false
+  }
+ ],
+ "result": ""
+}

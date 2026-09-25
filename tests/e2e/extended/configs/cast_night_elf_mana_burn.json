@@ -1,0 +1,45 @@
+{
+  "name": "cast_night_elf_mana_burn",
+  "agent": "tests.e2e.extended.scenarios.hero_cast:HeroCast",
+  "params": {
+    "hero": "Edem",
+    "ability": "AEmb",
+    "order": "manaburn",
+    "target": "oshm"
+  },
+  "max_ticks": 60,
+  "seed": 11,
+  "races": {
+    "0": "night_elf",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "Edem",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 12,
+      "x": 4700.0,
+      "y": 2300.0,
+      "n": 2
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "notes": "A Demon Hunter learns Mana Burn and casts it on a neutral hostile Shaman; checks the events and the target's mana/hp loss."
+}

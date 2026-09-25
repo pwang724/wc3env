@@ -1,0 +1,77 @@
+{
+  "title": "Second Barracks and a Blacksmith",
+  "race": "human",
+  "minutes": 4,
+  "opponent": "computer",
+  "goal": "You have a Barracks, two Farms and a big bank. Grow production: build a second Barracks and a Blacksmith, keep both Barracks training Footmen (and Riflemen once the Blacksmith stands) without pause, keep Peasants mining and building Farms ahead of the food cap, and do not sit on gold.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 1500,
+      "lumber": 800
+    },
+    {
+      "op": "spawn",
+      "type": "hbar",
+      "n": 1,
+      "at": "home",
+      "dx": 600,
+      "dy": -600,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "hhou",
+      "n": 1,
+      "at": "home",
+      "dx": -500,
+      "dy": -500,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "hhou",
+      "n": 1,
+      "at": "home",
+      "dx": -700,
+      "dy": -500,
+      "tag": "base"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "count:hbar",
+      "op": ">=",
+      "value": 2
+    },
+    {
+      "metric": "first_time:hbla",
+      "op": "<=",
+      "value": 130
+    },
+    {
+      "metric": "units_trained",
+      "op": ">=",
+      "value": 8
+    },
+    {
+      "metric": "supply_blocked_seconds",
+      "op": "<=",
+      "value": 15
+    },
+    {
+      "metric": "average_unspent_gold",
+      "op": "<=",
+      "value": 500
+    },
+    {
+      "metric": "idle_worker_seconds",
+      "op": "<=",
+      "value": 30
+    }
+  ]
+}

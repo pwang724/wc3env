@@ -1,0 +1,22 @@
+{
+  "name": "map_8_twilight_ruins",
+  "agent": "tests.e2e.extended.scenarios.map_tour:MapTour",
+  "params": {
+    "players": 8
+  },
+  "map": "(8)TwilightRuins.w3x",
+  "max_ticks": 150,
+  "seed": 11,
+  "races": {
+    "0": "orc",
+    "1": "human",
+    "2": "undead",
+    "3": "night_elf",
+    "4": "orc",
+    "5": "human",
+    "6": "undead",
+    "7": "night_elf"
+  },
+  "setup": [],
+  "notes": "8 players on (8)TwilightRuins.w3x with seven mixed-race computers: roster and bounds metadata, mining the nearest gold mine, and a scout crossing the map."
+}

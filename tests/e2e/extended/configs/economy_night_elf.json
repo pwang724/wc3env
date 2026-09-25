@@ -1,0 +1,23 @@
+{
+  "name": "economy_night_elf",
+  "agent": "tests.e2e.extended.scenarios.economy:Economy",
+  "params": {
+    "gold_worker": "ewsp",
+    "lumber_worker": "ewsp",
+    "hall": "etol"
+  },
+  "max_ticks": 160,
+  "seed": 11,
+  "races": {
+    "0": "night_elf",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    }
+  ],
+  "notes": "night_elf: workers bring in gold from the starting mine and lumber from the nearest tree."
+}

@@ -1,0 +1,35 @@
+{
+  "name": "spells",
+  "agent": "tests.e2e.scenarios.spells:Spells",
+  "max_ticks": 60,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "cheats": [],
+  "setup": [
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 12,
+      "x": 4700.0,
+      "y": 2300.0,
+      "n": 2
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "tick_seconds": 1.0,
+  "notes": "Staged: an Archmage learns and casts Water Elemental; checks hero_learn, spell_effect, mana drop, the summoned unit and a kill by it. Shamans are neutral hostile so the AI does not recall them."
+}

@@ -1,0 +1,62 @@
+{
+  "title": "Taking a second gold mine",
+  "minutes": 5,
+  "opponent": "computer",
+  "finish": "expansion_started_time",
+  "goal": "You have an army and plenty of resources. Take the nearest guarded gold mine: clear its guards with the army, then build a Town Hall next to the mine (build peasant1 Town Hall near the mine).",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 1500,
+      "lumber": 800
+    },
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 3,
+      "at": "home",
+      "dx": -1200,
+      "tag": "hero",
+      "items": [
+        "phea"
+      ]
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 5,
+      "at": "home",
+      "dx": -1050,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "hrif",
+      "n": 3,
+      "at": "home",
+      "dx": -1350,
+      "tag": "army"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "expansion_started_time",
+      "op": "<=",
+      "value": 240
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 3
+    },
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    }
+  ]
+}

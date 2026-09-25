@@ -1,0 +1,31 @@
+{
+  "name": "hero_revive",
+  "agent": "tests.e2e.extended.scenarios.hero_revive:HeroRevive",
+  "max_ticks": 300,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "spawn",
+      "type_id": "halt",
+      "player": 0,
+      "x": 3900.0,
+      "y": 2600.0,
+      "n": 1
+    }
+  ],
+  "notes": "An Archmage trained at an Altar dies and is revived there with the revive command: refused while the death resolves, then the same hero returns and gold is spent."
+}

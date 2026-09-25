@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wc3agent"
+version = "0.1.0"
+description = "LLM agent for wc3env: a macro model directs, Jev fights; scenarios measure both"
+requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["wc3env>=0.1.0"]
+
+[project.scripts]
+wc3agent = "wc3agent.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wc3agent = ["models/rates.json", "game/data/*.json", "game/data/maps/*.json", "scenarios/definitions/*.json"]

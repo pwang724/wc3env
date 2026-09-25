@@ -1,0 +1,12 @@
+{
+  "name": "worker_loop",
+  "agent": "tests.e2e.scenarios.worker_loop:WorkerLoop",
+  "max_ticks": 420,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "cheats": [],
+  "tick_seconds": 1.0,
+  "notes": "Milestone 2: real economy, gather gold and lumber, build Farm and Barracks, train a Footman."
+}

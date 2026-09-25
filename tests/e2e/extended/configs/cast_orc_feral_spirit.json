@@ -1,0 +1,45 @@
+{
+  "name": "cast_orc_feral_spirit",
+  "agent": "tests.e2e.extended.scenarios.hero_cast:HeroCast",
+  "params": {
+    "hero": "Ofar",
+    "ability": "AOsf",
+    "order": "spiritwolf",
+    "summon": "osw1"
+  },
+  "max_ticks": 60,
+  "seed": 11,
+  "races": {
+    "0": "orc",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "Ofar",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 12,
+      "x": 4700.0,
+      "y": 2300.0,
+      "n": 2
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "notes": "A Far Seer learns and casts Feral Spirit; checks hero_learn, spell_effect, summon events, mana and the wolves."
+}

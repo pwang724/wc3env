@@ -1,0 +1,31 @@
+__pycache__/
+*.py[cod]
+.venv*/
+runtime/
+dist/
+build/
+src/wc3env/native/*.dll
+*.egg-info/
+
+# Built third-party tooling and extracted game scripts (tools/scripts)
+tools/StormLib/
+tools/CascLib/
+tools/jass/
+tools/*.png
+
+# Run output stays local; small examples in docs/examples/ are tracked.
+runs/
+sessions/
+
+# Machine-specific settings (see .env.example)
+.env
+*.w3k
+
+# Packaged game assets stay local; generated reference JSON is tracked.
+assets/
+
+# hook env build outputs and per-process logs
+wc3hook/out/
+tests/e2e/out/
+tests/e2e/extended/out/
+tests/e2e/out_*.log

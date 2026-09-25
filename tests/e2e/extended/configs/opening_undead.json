@@ -1,0 +1,31 @@
+{
+  "name": "opening_undead",
+  "agent": "tests.e2e.extended.scenarios.opening:Opening",
+  "params": {
+    "worker": "uaco",
+    "hall": "unpl",
+    "supply": "uzig",
+    "production": "usep",
+    "unit": "ugho"
+  },
+  "max_ticks": 420,
+  "seed": 11,
+  "races": {
+    "0": "undead",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    }
+  ],
+  "notes": "undead: a worker builds supply and production with staged resources; production trains the first unit. Checks construct/train events and food."
+}

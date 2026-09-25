@@ -1,0 +1,72 @@
+{
+  "title": "Picking up items and tomes",
+  "minutes": 1.5,
+  "opponent": "computer",
+  "finish": {
+    "metric": "items_picked_up",
+    "op": ">=",
+    "value": 4
+  },
+  "finish_after_seconds": 15,
+  "goal": "Four items lie on the ground around your hero and nothing threatens it. Pick all of them up.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 2,
+      "at": "home",
+      "dx": -900,
+      "dy": -700,
+      "tag": "hero"
+    },
+    {
+      "op": "item",
+      "type": "tint",
+      "at": "home",
+      "dx": -1200,
+      "dy": -700
+    },
+    {
+      "op": "item",
+      "type": "rat6",
+      "at": "home",
+      "dx": -900,
+      "dy": -1000
+    },
+    {
+      "op": "item",
+      "type": "phea",
+      "at": "home",
+      "dx": -600,
+      "dy": -800
+    },
+    {
+      "op": "item",
+      "type": "tstr",
+      "at": "home",
+      "dx": -1000,
+      "dy": -400
+    }
+  ],
+  "checks": [
+    {
+      "metric": "items_picked_up",
+      "op": ">=",
+      "value": 4
+    },
+    {
+      "metric": "items_carried",
+      "op": ">=",
+      "value": 2
+    },
+    {
+      "metric": "unspent_skill_points",
+      "op": "<=",
+      "value": 0
+    }
+  ]
+}

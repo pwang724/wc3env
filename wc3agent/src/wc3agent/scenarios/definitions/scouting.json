@@ -1,0 +1,25 @@
+{
+  "title": "Finding the enemy base",
+  "minutes": 3,
+  "opponent": "computer",
+  "finish": "enemy_base_seen_time",
+  "goal": "Find the enemy base as early as you can with one cheap unit, without hurting your economy.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_base_seen_time",
+      "op": "<=",
+      "value": 120
+    },
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 7
+    }
+  ]
+}

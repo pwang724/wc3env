@@ -1,0 +1,45 @@
+{
+  "name": "cast_point_blizzard",
+  "agent": "tests.e2e.extended.scenarios.hero_cast:HeroCast",
+  "params": {
+    "hero": "Hamg",
+    "ability": "AHbz",
+    "order": "blizzard",
+    "target": "oshm",
+    "at_point": true
+  },
+  "max_ticks": 60,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "Hamg",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2600.0,
+      "n": 1
+    },
+    {
+      "op": "spawn",
+      "type_id": "oshm",
+      "player": 12,
+      "x": 4700.0,
+      "y": 2300.0,
+      "n": 2
+    },
+    {
+      "op": "invulnerable",
+      "player": 0,
+      "on": 1
+    }
+  ],
+  "notes": "An Archmage learns Blizzard and channels it on a ground point under neutral hostile Shamans; checks the events, mana and damage."
+}

@@ -1,0 +1,81 @@
+{
+  "title": "Defending with Burrows (Orc)",
+  "race": "orc",
+  "minutes": 2.5,
+  "opponent": "raid",
+  "goal": "Three Footmen and a Rifleman are raiding your Peons; two Grunts are across the base. Peons cannot fight but Burrows can: cast Battle Stations at each Burrow (or cast #peon Burrow on #burrow) so the Peons garrison and the Burrows shoot, bring the Grunts back and fight under the Burrows. Once the raiders are dead cast Stand Down at each Burrow so the Peons go back to work.",
+  "setup": [
+    {
+      "op": "spawn",
+      "type": "otrb",
+      "n": 1,
+      "at": "home",
+      "dx": 500,
+      "dy": -500,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "otrb",
+      "n": 1,
+      "at": "home",
+      "dx": -500,
+      "dy": -500,
+      "tag": "base"
+    },
+    {
+      "op": "spawn",
+      "type": "ogru",
+      "n": 2,
+      "at": "home",
+      "dx": -1400,
+      "dy": -900,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 3,
+      "at": "home",
+      "dx": 800,
+      "dy": 300,
+      "owner": "enemy"
+    },
+    {
+      "op": "spawn",
+      "type": "hrif",
+      "n": 1,
+      "at": "home",
+      "dx": 900,
+      "dy": 300,
+      "owner": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "fewest_workers",
+      "op": "<=",
+      "value": 1
+    },
+    {
+      "metric": "workers_lost",
+      "op": "<=",
+      "value": 1
+    },
+    {
+      "metric": "structures_lost",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "workers",
+      "op": ">=",
+      "value": 4
+    }
+  ]
+}

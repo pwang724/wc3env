@@ -1,0 +1,47 @@
+{
+  "title": "Reviving a fallen hero",
+  "minutes": 3,
+  "opponent": "computer",
+  "goal": "Your Archmage is caught alone by Grunts far from base and will die. Your Altar of Kings stands at home and you have gold. Get the Archmage back into play.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 1500,
+      "lumber": 500
+    },
+    {
+      "op": "spawn",
+      "type": "halt",
+      "at": "home",
+      "dx": -700,
+      "dy": 600
+    },
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 2,
+      "hp": 5,
+      "at": "toward:enemy_home:3000",
+      "tag": "hero"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ogru",
+      "n": 4,
+      "at": "toward:enemy_home:3000",
+      "tag": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    }
+  ]
+}

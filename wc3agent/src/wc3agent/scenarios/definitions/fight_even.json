@@ -1,0 +1,91 @@
+{
+  "title": "Even fight",
+  "minutes": 2.5,
+  "opponent": "attack",
+  "goal": "An enemy army the same size as yours (hero, melee, ranged) is attacking your army just outside your base. Win the fight and keep as much of your army as you can: focus fire, use spells, protect the hero, use the potion.",
+  "setup": [
+    {
+      "op": "hero",
+      "type": "Hamg",
+      "level": 3,
+      "at": "home",
+      "dx": -1300,
+      "tag": "hero",
+      "items": [
+        "phea"
+      ]
+    },
+    {
+      "op": "spawn",
+      "type": "hfoo",
+      "n": 5,
+      "at": "home",
+      "dx": -1150,
+      "tag": "army"
+    },
+    {
+      "op": "spawn",
+      "type": "hrif",
+      "n": 3,
+      "at": "home",
+      "dx": -1450,
+      "tag": "army"
+    },
+    {
+      "op": "hero",
+      "owner": "enemy",
+      "type": "Ofar",
+      "level": 3,
+      "at": "home",
+      "dx": -2600,
+      "tag": "enemy"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ogru",
+      "n": 4,
+      "at": "home",
+      "dx": -2500,
+      "dy": 150,
+      "tag": "enemy"
+    },
+    {
+      "op": "spawn",
+      "owner": "enemy",
+      "type": "ohun",
+      "n": 3,
+      "at": "home",
+      "dx": -2700,
+      "dy": -150,
+      "tag": "enemy"
+    }
+  ],
+  "checks": [
+    {
+      "metric": "enemy_army_destroyed_percent",
+      "op": ">=",
+      "value": 100
+    },
+    {
+      "metric": "army_kept_percent",
+      "op": ">=",
+      "value": 40
+    },
+    {
+      "metric": "hero_alive",
+      "op": "==",
+      "value": true
+    },
+    {
+      "metric": "unspent_skill_points",
+      "op": "<=",
+      "value": 0
+    },
+    {
+      "metric": "units_lost",
+      "op": "<=",
+      "value": 4
+    }
+  ]
+}

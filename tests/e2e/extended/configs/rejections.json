@@ -1,0 +1,31 @@
+{
+  "name": "rejections",
+  "agent": "tests.e2e.extended.scenarios.rejections:Rejections",
+  "max_ticks": 80,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    },
+    {
+      "op": "spawn",
+      "type_id": "hbar",
+      "player": 0,
+      "x": 4300.0,
+      "y": 2400.0,
+      "n": 1
+    }
+  ],
+  "notes": "Accepted orders the engine refuses: training without gold, without the required tech, and over the food cap leaves no train_start and spends nothing. A control order trains normally first."
+}

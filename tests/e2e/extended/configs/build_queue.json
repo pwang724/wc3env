@@ -1,0 +1,23 @@
+{
+  "name": "build_queue",
+  "agent": "tests.e2e.extended.scenarios.build_queue:BuildQueue",
+  "max_ticks": 240,
+  "races": {
+    "0": "human",
+    "1": null
+  },
+  "setup": [
+    {
+      "op": "ai",
+      "player": 1,
+      "paused": 1
+    },
+    {
+      "op": "resources",
+      "player": 0,
+      "gold": 5000,
+      "lumber": 5000
+    }
+  ],
+  "notes": "One Peasant receives a build order and a Shift-queued second one in the same batch and completes both Farms."
+}

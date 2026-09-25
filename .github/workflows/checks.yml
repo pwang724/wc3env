@@ -1,0 +1,31 @@
+name: Checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - name: Build hook and run native regressions
+        run: cmd /c wc3hook\build.bat
+      - run: python -m pip install -e . -e wc3agent ruff==0.16.8
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m unittest discover -s tests/unit -t .
+      - run: python -m unittest discover -s wc3agent/tests
+      - name: Build distributable wheel
+        run: python -m pip wheel --no-deps . --wheel-dir dist
+      - name: Test clean wheel installation outside the checkout
+        run: python tools/check_wheel.py dist
+      - name: Build agent wheel
+        run: python -m pip wheel --no-deps ./wc3agent --wheel-dir dist
+      - name: Test agent installation with and without the environment
+        run: python tools/check_agent_wheel.py dist

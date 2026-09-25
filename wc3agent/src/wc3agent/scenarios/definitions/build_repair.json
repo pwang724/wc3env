@@ -1,0 +1,75 @@
+{
+  "title": "Repairing a battered base",
+  "race": "human",
+  "minutes": 2.5,
+  "opponent": "computer",
+  "goal": "A raid just left four of your buildings badly damaged and nothing threatens you now. Repair all of them with Peasants (repair #peasant on #structure; two or three Peasants on one building finish it faster) while the rest keep mining, so no Peasant stands idle.",
+  "setup": [
+    {
+      "op": "ai",
+      "paused": true
+    },
+    {
+      "op": "resources",
+      "gold": 300,
+      "lumber": 200
+    },
+    {
+      "op": "spawn",
+      "type": "hbar",
+      "n": 1,
+      "at": "home",
+      "dx": 600,
+      "dy": -600,
+      "tag": "base",
+      "hp": 300
+    },
+    {
+      "op": "spawn",
+      "type": "hhou",
+      "n": 1,
+      "at": "home",
+      "dx": -500,
+      "dy": -500,
+      "tag": "base",
+      "hp": 80
+    },
+    {
+      "op": "spawn",
+      "type": "hhou",
+      "n": 1,
+      "at": "home",
+      "dx": -700,
+      "dy": -500,
+      "tag": "base",
+      "hp": 150
+    },
+    {
+      "op": "spawn",
+      "type": "hwtw",
+      "n": 1,
+      "at": "home",
+      "dx": 0,
+      "dy": -800,
+      "tag": "base",
+      "hp": 60
+    }
+  ],
+  "checks": [
+    {
+      "metric": "structure_health_percent",
+      "op": ">=",
+      "value": 95
+    },
+    {
+      "metric": "idle_worker_seconds",
+      "op": "<=",
+      "value": 30
+    },
+    {
+      "metric": "gold_mined",
+      "op": ">=",
+      "value": 300
+    }
+  ]
+}
