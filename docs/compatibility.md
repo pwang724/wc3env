@@ -52,6 +52,29 @@ The tracked replay fixture contains recorded commands, not map assets. Arbitrary
 other graphics backends and LAN require separate validation. LAN create/join and network
 command delivery are not implemented by the current offline API.
 
+## Rollout throughput
+
+Measured 2026-09-28 with `tools/bench.py` on an Intel Core Ultra 5 325 laptop (8 hybrid cores,
+Intel Graphics, Windows 11 build 26200) that kept about 2.6 cores busy with other applications.
+Workload: Echo Isles, Insane melee AI playing an agent slot against the Insane computer, 250 ms
+steps at speed 2048, render off, both players observed every step, one Python process per game.
+
+| Case | Before (hook at `e45a6ae`) | After |
+|---|---|---|
+| One game, first 6 game minutes | 8.7x realtime, 30 ms per step | 26-33x realtime, 5-7 ms per step |
+| Eight games, machine saturated | 45x realtime aggregate, 181 steps/s | 117-145x realtime aggregate, 470-580 steps/s |
+| CPU per game (exact cycle counts, minutes 2-6) | | about 4.3 ms game and 1.0 ms host Python per step: 45-47 game seconds per CPU second |
+| 60 in-process resets, no recycling | private 219 -> 222 MiB, used address space 2649 -> 2668 MiB | private 220 -> 233 MiB, used address space 2649 -> 2674 MiB |
+| In-process reset | 1.7 s | 1.3-1.6 s, mostly map loading |
+| Binary observations (`observation="binary"`), one game, minutes 0-8 | | 38x realtime, 5.1 ms per step, 68 game seconds per CPU second (JSON in the same run: 30x, 7.1 ms, 47) |
+| `VectorSession`, eight games, minutes 0-5, agent observed | | binary: 350x realtime aggregate, 1,399 steps/s; JSON: 231x, 924 steps/s |
+
+The gains came from skipping drawing when rendering is off, 1 ms timer resolution with a wake
+event for the game thread, and querying fog directly for destructables in observations. Both
+players' observations stayed identical to the original hook, and to render-on runs, for all
+3,600 steps (15 game minutes) of a seeded match. Throughput under Wine has not been measured;
+`docker/` has a `bench` mode for it.
+
 ## Linux / Wine
 
 The [Docker worker](../docker/README.md) passed observations, worker movement, four exact
@@ -60,3 +83,10 @@ Wine 11, Windows Python 3.11.9, Xvfb and Mesa llvmpipe with 4 vCPUs / 8 GiB RAM,
 privileged mode. Files under a mounted `/sessions` survived container removal. These short
 checks do not establish throughput; model-driven runs, render-off, repeated resets and long
 workloads are untested there. Windows results do not establish Linux compatibility.
+
+Modal VM sandboxes (kernel 7.2.6, AMD EPYC, 8 CPUs, no `/dev/ntsync`) passed the smoke test and
+[`modal_run.py`](../docker/modal_run.py) benchmarks on 2026-09-28, with the workload above and
+binary observations. Per game in an episode: 46-54x realtime. One prefix (one wineserver) did not
+scale past four games (135x with four, 127x with eight); four prefixes of two games reached about
+380x while playing and about 50 game seconds per CPU second (container cgroup time), with 21% of it
+in wineserver. Launch took 13-20 s and an in-process reset 2.5 s.

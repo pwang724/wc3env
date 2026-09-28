@@ -228,173 +228,122 @@ static DWORD ability_id(BYTE *ab) {
     return 0;
 }
 
-/* one event: {"kind": k, <fields>} */
-static JW *g_w;
-static void ev(const char *kind) {
-    jw_open(g_w, '{');
-    jw_key(g_w, "kind");
-    jw_string(g_w, kind);
-}
-static void ev_id(const char *key, unsigned id) {
-    jw_key(g_w, key);
-    jw_uint(g_w, id);
-}
-static void ev_type(const char *key, DWORD t) {
-    jw_key(g_w, key);
-    jw_fourcc(g_w, t);
-}
-static void ev_end(void) {
-    jw_close(g_w, '}');
+/* An event as its observer may see it (obsbin.h BinEvent). A hidden secondary unit or item reads 0. */
+static int event_record(const Event *e, int player, BinEvent *r) {
+    unsigned bit = 1u << player, other = (e->other_seen & bit) ? e->other_id : 0;
+    int item_seen = (e->item_seen & bit) != 0;
+    *r = (BinEvent){(DWORD)e->id, e->unit_id};
+    switch (e->id) {
+    case 20: /* death */
+        r->type_id = e->type;
+        r->value = e->owner;
+        break;
+    case 26: case 27: case 28: case 29: case 30: case 31: /* construct_* and upgrade_*: the structure's type */
+        r->type_id = e->type;
+        break;
+    case 32: case 33: case 35: case 36: case 37: case 42: case 277: /* train, research, hero_learn, spell_effect */
+        r->type_id = e->argument;
+        break;
+    case 34: /* train_finish */
+        r->other_id = other;
+        r->type_id = other ? e->other_type : 0;
+        break;
+    case 41: /* hero_level */
+        r->value = e->level;
+        break;
+    case 47: /* summon: the summoner is the unit, the summoned the other */
+        r->unit_id = other;
+        r->other_id = e->unit_id;
+        r->type_id = e->type;
+        break;
+    case 49: /* item_pickup */
+        r->other_id = item_seen ? e->item_id : 0;
+        r->type_id = item_seen ? e->item_type : 0;
+        break;
+    case 50: /* item_use */
+        r->type_id = item_seen ? e->item_type : 0;
+        break;
+    case 18: /* attacked */
+        r->other_id = other;
+        break;
+    case 274: /* item_sold */
+        r->other_id = other;
+        r->type_id = item_seen ? e->item_type : 0;
+        break;
+    default:
+        return 0;
+    }
+    return 1;
 }
 
-/* the events `player` could see since its previous observation, oldest first */
-unsigned emit_events(JW *w, int player) {
+/* The events `player` could see since its previous observation, oldest first, as records; returns the
+ * number lost to ring overflow. */
+unsigned events_gather(BB *out, int player) {
     unsigned from = g_cursor[player], head = g_ev_head[player];
     unsigned lost = head - from > EV_CAP ? head - from - EV_CAP : 0;
     if (lost)
         from = head - EV_CAP;
-    g_w = w;
     for (unsigned k = from; k != head; k++) {
-        Event *e = &g_ev[player][k % EV_CAP];
-        unsigned ua = e->unit_id, va = (e->other_seen & (1u << player)) ? e->other_id : 0;
-        switch (e->id) {
-        case 20:
-            ev("death");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            jw_key(g_w, "owner");
-            jw_int(g_w, e->owner);
-            ev_end();
-            break;
-        case 26:
-            ev("construct_start");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 27:
-            ev("construct_cancel");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 28:
-            ev("construct_finish");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 29:
-            ev("upgrade_start");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 30:
-            ev("upgrade_cancel");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 31:
-            ev("upgrade_finish");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 32:
-            ev("train_start");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->argument);
-            ev_end();
-            break;
-        case 33:
-            ev("train_cancel");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->argument);
-            ev_end();
-            break;
-        case 34:
-            ev("train_finish");
-            ev_id("unit_id", ua);
-            ev_id("trained_id", va);
-            ev_type("type_id", va ? e->other_type : 0);
-            ev_end();
-            break;
-        case 35:
-            ev("research_start");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->argument);
-            ev_end();
-            break;
-        case 36:
-            ev("research_cancel");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->argument);
-            ev_end();
-            break;
-        case 37:
-            ev("research_finish");
-            ev_id("unit_id", ua);
-            ev_type("type_id", e->argument);
-            ev_end();
-            break;
-        case 41:
-            ev("hero_level");
-            ev_id("unit_id", ua);
-            jw_key(g_w, "level");
-            jw_int(g_w, e->level);
-            ev_end();
-            break;
-        case 42:
-            ev("hero_learn");
-            ev_id("unit_id", ua);
-            ev_type("ability_id", e->argument);
-            ev_end();
-            break;
-        case 47:
-            ev("summon");
-            ev_id("unit_id", va);
-            ev_id("summoned_id", ua);
-            ev_type("type_id", e->type);
-            ev_end();
-            break;
-        case 49:
-            ev("item_pickup");
-            ev_id("unit_id", ua);
-            ev_id("item_id", (e->item_seen & (1u << player)) ? e->item_id : 0);
-            ev_type("type_id", (e->item_seen & (1u << player)) ? e->item_type : 0);
-            ev_end();
-            break;
-        case 50:
-            ev("item_use");
-            ev_id("unit_id", ua);
-            ev_type("type_id", (e->item_seen & (1u << player)) ? e->item_type : 0);
-            ev_end();
-            break;
-        case 18:
-            ev("attacked");
-            ev_id("unit_id", ua);
-            ev_id("attacker_id", va);
-            ev_end();
-            break;
-        case 274:
-            ev("item_sold");
-            ev_id("unit_id", ua);
-            ev_id("buyer_id", va);
-            ev_type("type_id", (e->item_seen & (1u << player)) ? e->item_type : 0);
-            ev_end();
-            break;
-        case 277:
-            ev("spell_effect");
-            ev_id("unit_id", ua);
-            ev_type("ability_id", e->argument);
-            ev_end();
-            break;
-        }
+        BinEvent r;
+        if (event_record(&g_ev[player][k % EV_CAP], player, &r))
+            bb_push(out, &r, sizeof r);
     }
     g_cursor[player] = head;
     return lost;
+}
+
+/* The JSON names of each kind's fields, written in this order after unit_id; NULL when it has none. */
+static const struct {
+    DWORD id;
+    const char *kind, *other, *type, *value;
+} KINDS[] = {
+    {18, "attacked", "attacker_id", NULL, NULL},
+    {20, "death", NULL, "type_id", "owner"},
+    {26, "construct_start", NULL, "type_id", NULL},
+    {27, "construct_cancel", NULL, "type_id", NULL},
+    {28, "construct_finish", NULL, "type_id", NULL},
+    {29, "upgrade_start", NULL, "type_id", NULL},
+    {30, "upgrade_cancel", NULL, "type_id", NULL},
+    {31, "upgrade_finish", NULL, "type_id", NULL},
+    {32, "train_start", NULL, "type_id", NULL},
+    {33, "train_cancel", NULL, "type_id", NULL},
+    {34, "train_finish", "trained_id", "type_id", NULL},
+    {35, "research_start", NULL, "type_id", NULL},
+    {36, "research_cancel", NULL, "type_id", NULL},
+    {37, "research_finish", NULL, "type_id", NULL},
+    {41, "hero_level", NULL, NULL, "level"},
+    {42, "hero_learn", NULL, "ability_id", NULL},
+    {47, "summon", "summoned_id", "type_id", NULL},
+    {49, "item_pickup", "item_id", "type_id", NULL},
+    {50, "item_use", NULL, "type_id", NULL},
+    {274, "item_sold", "buyer_id", "type_id", NULL},
+    {277, "spell_effect", NULL, "ability_id", NULL},
+};
+void events_json(JW *w, const BinEvent *events, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        const BinEvent *e = &events[i];
+        size_t k = 0;
+        while (KINDS[k].id != e->kind)
+            k++; /* events_gather records only these kinds */
+        jw_open(w, '{');
+        jw_key(w, "kind");
+        jw_string(w, KINDS[k].kind);
+        jw_key(w, "unit_id");
+        jw_uint(w, e->unit_id);
+        if (KINDS[k].other) {
+            jw_key(w, KINDS[k].other);
+            jw_uint(w, e->other_id);
+        }
+        if (KINDS[k].type) {
+            jw_key(w, KINDS[k].type);
+            jw_fourcc(w, e->type_id);
+        }
+        if (KINDS[k].value) {
+            jw_key(w, KINDS[k].value);
+            jw_int(w, e->value);
+        }
+        jw_close(w, '}');
+    }
 }
 
 void events_init_hooks(void) {

@@ -9,11 +9,20 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from .groups import ControlGroups
-from .protocol import Action, Observation, ProtocolError, normalize_actions, validate_actions
+from .protocol import (
+    Action,
+    Observation,
+    ProtocolError,
+    normalize_actions,
+    observation_result,
+    observation_seconds,
+    validate_actions,
+)
 from .rpc import RpcError
 
 RACES = ("human", "orc", "undead", "night_elf", "random")
 CONTROLS = ("agent", "computer")
+OBSERVATIONS = ("json", "binary")
 
 
 @dataclass(frozen=True)
@@ -69,6 +78,10 @@ class GameConfig:
     setup: MatchSetup | None = None
     max_episodes_per_process: int | None = 32
     output_dir: str | Path | None = None
+    # "binary": agent slots' observations are binary.BinaryObservation numpy records read from shared memory,
+    # taken in the step's own round trip; computer players are not observed. Needs numpy. "json": dictionaries
+    # for every configured player (the default).
+    observation: str = "json"
 
     def __post_init__(self):
         if self.map is not None and (not isinstance(self.map, str) or not self.map.strip()):
@@ -82,6 +95,8 @@ class GameConfig:
             raise ValueError("at least one player must be an agent")
         if self.mode not in ("stepping", "realtime"):
             raise ValueError("mode must be stepping or realtime")
+        if self.observation not in OBSERVATIONS:
+            raise ValueError("observation must be json or binary")
         if self.window_mode not in ("interactive", "background"):
             raise ValueError("window_mode must be interactive or background")
         if type(self.render) is not bool:
@@ -164,7 +179,7 @@ class PlayerView:
 
     @property
     def done(self) -> bool:
-        return bool(self.observation and self.observation.get("result"))
+        return bool(self.observation is not None and observation_result(self.observation))
 
     @property
     def groups(self) -> ControlGroups:
@@ -190,6 +205,7 @@ class GameSession:
         self._faulted = False
         self._episodes_in_process = 0
         self._tuning: dict[str, dict] = {}
+        self._shared = None  # binary.SharedObservations of the current process
         self.observations: dict[int, dict] = {}
         self.setup: dict | None = None
         self.steps = 0
@@ -218,6 +234,9 @@ class GameSession:
     def _release_game(self) -> None:
         with self._state_lock:
             game, self._game = self._game, None
+        if self._shared is not None:
+            self._shared.close()
+            self._shared = None
         if game is not None:
             # A replacement may fail before tuning is restored. Keep the previous
             # successful settings for the next recovery attempt in that case.
@@ -306,12 +325,13 @@ class GameSession:
             batches = {}
             for player in self.config.agent_slots:
                 batch = normalize_actions(actions[player])
-                if batch and self.observations[player].get("result"):
-                    raise ProtocolError("finished players must submit an empty batch")
-                validate_actions(Observation.from_dict(self.observations[player]), batch)
+                if batch:
+                    if observation_result(self.observations[player]):
+                        raise ProtocolError("finished players must submit an empty batch")
+                    validate_actions(Observation.of(self.observations[player]), batch)
                 batches[player] = batch
             # Validate every player's batch before sending any order. One shared clock advance.
-            before = next(iter(self.observations.values()))["game_time_seconds"]
+            before = observation_seconds(next(iter(self.observations.values())))
             timings["validation"] = 1000 * (time.perf_counter() - started)
             try:
                 rejected = {p: [] for p in batches}
@@ -335,7 +355,10 @@ class GameSession:
                         phase = time.perf_counter()
                         rpc = self.game.rpc
                         try:
-                            step_result = rpc.step(step_ms)
+                            if self.config.observation == "binary":
+                                step_result = rpc.step(step_ms, observe=list(self.config.agent_slots))
+                            else:
+                                step_result = rpc.step(step_ms)
                         finally:
                             timings["step"] = 1000 * (time.perf_counter() - phase)
                             rpc_timings.append({"method": "step", **(rpc.last_timing_ms or {})})
@@ -347,9 +370,12 @@ class GameSession:
                     # Realtime and test staging can finish the game between two RPC calls.
                     step_result = {"reason": "game_over"}
                 phase = time.perf_counter()
-                observations = self._observe_all(rpc_timings)
+                if step_result is not None and "observations" in step_result:
+                    observations = self._publish(self._copy_binary(step_result["observations"]))
+                else:
+                    observations = self._observe_all(rpc_timings)
                 timings["observe"] = 1000 * (time.perf_counter() - phase)
-                elapsed_ms = round((next(iter(observations.values()))["game_time_seconds"] - before) * 1000)
+                elapsed_ms = round((observation_seconds(next(iter(observations.values()))) - before) * 1000)
                 if step_result is not None and elapsed_ms != step_ms and not self.done:
                     raise RuntimeError(f"game advanced {elapsed_ms} ms, expected {step_ms}; call reset()")
             except Exception:
@@ -371,20 +397,35 @@ class GameSession:
                 },
             )
 
-    def _observe_all(self, rpc_timings: list | None = None) -> dict[int, dict]:
-        observations = {}
-        for player in self.config.players:
-            rpc = self.game.rpc
-            obs = rpc.observe(player.slot)
-            if rpc_timings is not None:
-                rpc_timings.append({"method": "observe", "player": player.slot, **(rpc.last_timing_ms or {})})
-            previous = self.observations.get(player.slot)
-            delta = obs["game_time_seconds"] - previous["game_time_seconds"] if previous else 0
-            obs["ticks_skipped"] = max(0, int(delta) - 1) if self.config.mode == "realtime" else 0
-            observations[player.slot] = obs
+    def _copy_binary(self, located: list[dict]) -> dict:
+        """Copy the binary observations a reply located out of shared memory, before the next request
+        overwrites them."""
+        if self._shared is None:
+            from .binary import SharedObservations
+
+            self._shared = SharedObservations(self.game.pid)
+        return {o["player"]: self._shared.read(o["offset"], o["size"]) for o in located}
+
+    def _publish(self, observations: dict) -> dict:
         self.observations = observations
         self.done = self.game.rpc.status == "ended"
         return observations
+
+    def _observe_all(self, rpc_timings: list | None = None) -> dict:
+        binary = self.config.observation == "binary"
+        observations = {}
+        for slot in self.config.agent_slots if binary else [p.slot for p in self.config.players]:
+            rpc = self.game.rpc
+            if binary:  # each request overwrites the mapping: copy before the next
+                observations.update(self._copy_binary(rpc.observe_binary(slot)["observations"]))
+            else:
+                obs = observations[slot] = rpc.observe(slot)
+                previous = self.observations.get(slot)
+                delta = obs["game_time_seconds"] - previous["game_time_seconds"] if previous else 0
+                obs["ticks_skipped"] = max(0, int(delta) - 1) if self.config.mode == "realtime" else 0
+            if rpc_timings is not None:
+                rpc_timings.append({"method": "observe", "player": slot, **(rpc.last_timing_ms or {})})
+        return self._publish(observations)
 
     def debug(self, op: str, **args) -> dict:
         """A staging or tuning op (`spawn`, `resources`, `speed`, ...); see the protocol's Debug section."""

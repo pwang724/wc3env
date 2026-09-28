@@ -61,6 +61,10 @@ static void cmd_pktlog(const char *a) {
     g_pktlog = atoi(a);
     pipe_send("ok");
 }
+static void cmd_steplog(const char *a) {
+    g_steplog = atoi(a);
+    pipe_send("ok");
+}
 static void cmd_scan(const char *a) {
     mem_scan(a);
     pipe_send("ok");
@@ -96,8 +100,9 @@ static const struct {
     const char *name;
     void (*fn)(const char *arg);
 } COMMANDS[] = {
-    {"ping", cmd_ping}, {"echo", cmd_echo}, {"info", cmd_info},   {"where", cmd_where}, {"pktlog", cmd_pktlog},
-    {"scan", cmd_scan}, {"dump", cmd_dump}, {"trace", cmd_trace}, {"watch", cmd_watch}, {"profile", cmd_profile},
+    {"ping", cmd_ping},       {"echo", cmd_echo},   {"info", cmd_info},   {"where", cmd_where},
+    {"pktlog", cmd_pktlog},   {"steplog", cmd_steplog}, {"scan", cmd_scan}, {"dump", cmd_dump},
+    {"trace", cmd_trace},     {"watch", cmd_watch}, {"profile", cmd_profile},
 };
 
 static void handle_line(char *line) {

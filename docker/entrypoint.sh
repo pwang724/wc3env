@@ -20,6 +20,26 @@ case "$mode" in
         timeout 180s wine "$python" 'Z:\opt\worker\smoke.py' \
             --output "$(winepath -w "$session/env/result.json")" "$@"
         ;;
+    init)
+        # Initialize the Wine prefix, for an image built with INIT_WINE=0 (docker/modal_run.py).
+        bash /opt/worker/install.sh
+        if [ -d /opt/wheels/agent ]; then bash /opt/worker/install.sh agent; fi
+        ;;
+    bench|profile)
+        # tools/bench.py, through bench_prefixes.py (--prefixes N: a wineserver per group of games), or
+        # tools/profile_game.py; linux-cpu.json adds the container's own CPU.
+        python3 /opt/worker/license.py
+        session="$(mktemp -d "/sessions/$mode-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXXXX")"
+        export WC3_OUTPUT_DIR
+        WC3_OUTPUT_DIR="$(winepath -w "$session")"
+        echo "Session: $session"
+        if [ "$mode" = bench ]; then
+            set -- python3 /opt/worker/bench_prefixes.py --output-dir "$session" "$@"
+        else
+            set -- wine "$python" 'Z:\opt\worker\profile_game.py' "$@"
+        fi
+        python3 /opt/worker/linux_cpu.py --output "$session/linux-cpu.json" -- "$@"
+        ;;
     run|agent)
         python3 /opt/worker/license.py
         wine "$python" -m wc3agent "$@"
@@ -29,7 +49,7 @@ case "$mode" in
         wine "$python" "$@"
         ;;
     *)
-        echo 'Usage: smoke | run <wc3agent arguments> | python [arguments]' >&2
+        echo 'Usage: init | smoke | bench|profile [arguments] | run <wc3agent arguments> | python [arguments]' >&2
         exit 2
         ;;
 esac

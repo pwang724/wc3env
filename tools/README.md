@@ -7,6 +7,9 @@
 | `disasm.py`, `imports.py`, `natives.py` | Executable inspection for hook development |
 | `check_wheel.py`, `check_agent_wheel.py` | Installed-wheel validation used by CI |
 | `check_compatibility.py` | Local compatibility and scale matrix behind [docs/compatibility.md](../docs/compatibility.md) |
+| `bench.py` | Rollout throughput and memory: full AI-played games per instance, game seconds per wall and CPU second, step phases, reset time, memory per process |
+| `profile_game.py` | Samples a stepping game's threads from outside: CPU per thread, modules and exe functions on the stack |
+| `winproc.py` | CPU (exact cycle counts) and memory of a Windows process, shared by the tools above and `check_compatibility.py` |
 | `example_observation.py` | Regenerate `docs/examples/observation.json` from a real game |
 
 ## Prepare agent inputs

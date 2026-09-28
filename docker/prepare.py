@@ -26,6 +26,7 @@ REQUIRED_GAME_FILES = ("Warcraft III.exe", "Mss32.dll", "War3.mpq", "War3x.mpq")
 HOOK = "src/wc3env/native/wc3hook.dll"
 PREPARED = ("wc3agent/src/wc3agent/game/data/reference.json",)
 SOURCE_DIRS = ("src/wc3env", "wc3agent/src/wc3agent", "docker", "wc3hook")
+TOOLS = ("tools/bench.py", "tools/profile_game.py", "tools/winproc.py")
 SOURCE_SUFFIXES = (".py", ".json", ".md", ".sh", ".c", ".h", ".bat", ".txt")
 TEXT_SUFFIXES = (".sh", ".py", ".json", ".bat", ".c", ".h")
 
@@ -53,7 +54,7 @@ def prepare(output: Path, game_dir: Path, root: Path = ROOT) -> int:
     for name in PREPARED:
         if not (root / name).is_file():
             raise FileNotFoundError(f"Missing {name}; run python -m tools.prepare reference")
-    names = ["pyproject.toml", "setup.py", "README.md", "LICENSE", HOOK, *PREPARED, "wc3hook/yyjson/LICENSE"]
+    names = ["pyproject.toml", "setup.py", "README.md", "LICENSE", HOOK, *PREPARED, "wc3hook/yyjson/LICENSE", *TOOLS]
     for package in ("wc3agent",):
         names += [f"{package}/{name}" for name in ("pyproject.toml", "README.md", "LICENSE")]
     for directory in SOURCE_DIRS:

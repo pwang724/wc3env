@@ -30,6 +30,7 @@ class DockerContextTest(unittest.TestCase):
         for name in (
             prepare.HOOK,
             *prepare.PREPARED,
+            *prepare.TOOLS,
             "pyproject.toml",
             "setup.py",
             "README.md",
@@ -71,6 +72,7 @@ class DockerContextTest(unittest.TestCase):
             "assets/game/Maps/FrozenThrone/test.w3x",
             prepare.HOOK,
             *prepare.PREPARED,
+            *prepare.TOOLS,
             "Dockerfile",
             "wc3hook/main.c",
         ):

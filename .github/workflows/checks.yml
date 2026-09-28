@@ -16,7 +16,7 @@ jobs:
           architecture: x64
       - name: Build hook and run native regressions
         run: cmd /c wc3hook\build.bat
-      - run: python -m pip install -e . -e wc3agent ruff==0.16.8
+      - run: python -m pip install -e .[binary] -e wc3agent ruff==0.16.8
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m unittest discover -s tests/unit -t .

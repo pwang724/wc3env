@@ -17,8 +17,11 @@ def main():
     if not package.is_relative_to(Path(sys.prefix).resolve()):
         raise AssertionError(f"package loaded outside the test environment: {package}")
     for module in pkgutil.walk_packages(wc3env.__path__, wc3env.__name__ + "."):
-        if not module.name.endswith(".__main__"):  # importing it runs the pool CLI
-            importlib.import_module(module.name)
+        if module.name.endswith(".__main__"):  # importing it runs the pool CLI
+            continue
+        if module.name == "wc3env.binary" and importlib.util.find_spec("numpy") is None:
+            continue  # the optional `binary` extra
+        importlib.import_module(module.name)
 
     from wc3env.fake_server import FakeServer
     from wc3env.game import hook_dll

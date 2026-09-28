@@ -7,8 +7,15 @@ BYTE *g_game; /* GameUpdate's this, once seen */
 static void *g_frame_tls;
 DWORD g_game_tid;
 volatile LONG g_stepmode;   /* 1: clock frozen between steps; GameUpdate feeds the sim */
-volatile LONG g_render = 1; /* 0: skip the gx present */
+volatile LONG g_render = 1; /* 0: skip drawing and presentation once the match is held */
 volatile LONG g_pktlog;     /* `pktlog <n>`: log the next n turn-packet deliveries */
+volatile LONG g_steplog;    /* `steplog <n>`: timeline of the next n steps */
+static LONGLONG g_steplog_t0;
+#define STEPLOG(fmt, ...)                                                                                 \
+    do {                                                                                                  \
+        if (g_steplog > 0)                                                                                \
+            hook_log("steplog %7.3f ms " fmt, 1000.0 * (real_qpc() - g_steplog_t0) / g_qpc_freq, __VA_ARGS__); \
+    } while (0)
 
 /* ---- GameUpdate and step mode -----------------------------------------------------------
  * thiscall GameUpdate(this, now_ms) at RVA 0x1aefd0 runs once per frame. Layout (tools/disasm.py):
@@ -64,8 +71,11 @@ static void step_to(DWORD target) {
     g_progress_time = game_time();
     g_step_frames = 0;
     g_step_reason = "running";
+    g_steplog_t0 = g_step_started;
+    STEPLOG("request target %lu tid %lu", target, GetCurrentThreadId());
     InterlockedExchange(&g_stepping, 1);
     clock_freeze(0);
+    clock_wake();
 }
 
 /* pipe thread */
@@ -157,6 +167,9 @@ static void step_finish(BYTE *t, const char *why) {
     if (why)
         hook_log("step ended early (%s): gametime %lu target %lu", why, gt, g_step_target);
     g_step_frames_last = g_step_frames;
+    STEPLOG("finish gametime %lu frames %ld", gt, g_step_frames);
+    if (g_steplog > 0 && !g_holding)
+        InterlockedDecrement(&g_steplog);
     if (g_holding) {
         cleanup_game_observers(t);
         setup_hold();
@@ -286,14 +299,35 @@ volatile LONG g_frames_seen; /* heartbeat: frames run only while the clock moves
  * each frame (0x5dff0) and the visibility check reads component 0xd through it (0x26d280).
  * Between steps the clock stands still, no frame runs, and the game thread sits in its pacing
  * wait with the slot empty, so an RPC job serviced there installs the table itself. */
-static int __cdecl GxPresent_hook(int flags) {
+static void frame_seen(void) {
     InterlockedIncrement(&g_frames_seen);
     g_frame_tls = TlsGetValue(*(DWORD *)(g_base + RVA_TLS_SLOT));
     rpc_service_jobs();
+}
+static int __cdecl GxPresent_hook(int flags) {
+    frame_seen();
     if (!g_render && !D3dPresent_orig)
         hook_d3d_present();
     return GxPresent_orig(flags);
 }
+/* Render off skips the frame's paint handler once the match is held, keeping GxPresent (backend
+ * cleanup, FPU control) at most 30 times a real second; docs/design.md#rendering-and-input. */
+typedef int(__cdecl *PaintFn)(void);
+static PaintFn Paint_orig;
+static LONGLONG g_last_present;
+static int __cdecl Paint_hook(void) {
+    if (g_render || !g_held)
+        return Paint_orig();
+    LONGLONG now = real_qpc();
+    if (now - g_last_present < g_qpc_freq / 30) {
+        frame_seen();
+        return 1;
+    }
+    g_last_present = now;
+    GxPresent_hook(*(int *)(g_base + RVA_PAINT_PRESENT_FLAGS));
+    return 1;
+}
+
 /* from the frame loop's pacing wait (clock.c): the one place the game thread passes between steps */
 void rpc_service_jobs_between_frames(void) {
     if (!rpc_job_pending() || !g_frame_tls)
@@ -314,6 +348,8 @@ void rpc_service_jobs_between_frames(void) {
 typedef int(__cdecl *PktDeliverFn)(BYTE *msg, void *arg);
 static PktDeliverFn PktDeliver_orig;
 static int __cdecl PktDeliver_hook(BYTE *msg, void *arg) {
+    if (msg && g_stepping)
+        STEPLOG("deliver type %02x tid %lu", msg[4], GetCurrentThreadId());
     if (msg && g_pktlog > 0) {
         InterlockedDecrement(&g_pktlog);
         BYTE *d = *(BYTE **)(msg + 8);
@@ -354,6 +390,7 @@ static int __cdecl TurnProducer_hook(BYTE *host, int arg) {
         g_produce_ms = g_produce_target - g_sent_ms;
         if (g_produce_ms > 400)
             g_produce_ms = 400;
+        STEPLOG("produce %lu ms tid %lu", g_produce_ms, GetCurrentThreadId());
     }
     return TurnProducer_orig(host, arg);
 }
@@ -367,5 +404,6 @@ void step_init_hooks(void) {
     MH_CreateHook(g_base + RVA_PKT_DELIVER, (void *)PktDeliver_hook, (void **)&PktDeliver_orig);
     MH_STATUS s = MH_CreateHook(g_base + RVA_GAMEUPDATE, (void *)GameUpdate_hook, (void **)&GameUpdate_orig);
     MH_STATUS p = MH_CreateHook(g_base + RVA_GXPRESENT, (void *)GxPresent_hook, (void **)&GxPresent_orig);
+    require_hook(MH_CreateHook(g_base + RVA_PAINT, (void *)Paint_hook, (void **)&Paint_orig), "frame paint");
     hook_log("GameUpdate hook: %s, GxPresent hook: %s", MH_StatusToString(s), MH_StatusToString(p));
 }

@@ -85,6 +85,7 @@ static int run_on_game_thread(void (*fn)(void *), void *arg, DWORD timeout_ms) {
     g_job_arg = arg;
     g_job_failed = 0;
     InterlockedExchange(&g_job_pending, 1);
+    clock_wake();
     DWORD r = real_wait(g_job_done, timeout_ms);
     if (r != WAIT_OBJECT_0) {
         hook_log("rpc: the game thread did not service a job in %lu ms (gametime %lu, frozen %ld, stepping %ld)",
@@ -108,6 +109,80 @@ static void observe_job(void *a) {
     ObserveJob *j = (ObserveJob *)a;
     obs_write_json(j->w, j->player, ++g_obs_seq[j->player] - 1);
     j->ok = 1;
+}
+
+/* ---- binary observations: records in a shared memory mapping that the host reads in place ------
+ * (obsbin.h). The mapping is Local\wc3hook-obs-<pid>, OBS_MAP_BYTES long, created at the first
+ * binary request; each request overwrites it from offset 0, one observation per player, 8-byte aligned. */
+static BYTE *g_obs_view;
+static int obs_map_ready(void) {
+    if (g_obs_view)
+        return 1;
+    char name[64];
+    _snprintf(name, sizeof name, "Local\\wc3hook-obs-%lu", GetCurrentProcessId());
+    HANDLE map = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, OBS_MAP_BYTES, name);
+    if (!map)
+        return 0;
+    g_obs_view = (BYTE *)MapViewOfFile(map, FILE_MAP_WRITE, 0, 0, OBS_MAP_BYTES);
+    return g_obs_view != NULL; /* the mapping lives as long as the process */
+}
+typedef struct {
+    int n, ok;
+    int players[16];
+    DWORD offset[16], size[16];
+} BinaryJob;
+static void binary_job(void *a) {
+    BinaryJob *j = (BinaryJob *)a;
+    DWORD at = 0;
+    for (int i = 0; i < j->n; i++) {
+        int p = j->players[i];
+        DWORD size = obs_write_binary(g_obs_view + at, OBS_MAP_BYTES - at, p, ++g_obs_seq[p] - 1);
+        if (!size)
+            return; /* over the mapping: j->ok stays 0 */
+        j->offset[i] = at;
+        j->size[i] = size;
+        at += (size + 7) & ~7u;
+    }
+    j->ok = 1;
+}
+/* the players of a job, each at most once; NULL is an error detail */
+static const char *binary_players(BinaryJob *j, const int *players, int n) {
+    memset(j, 0, sizeof *j);
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < j->n; i++)
+            if (j->players[i] == players[k])
+                return "observe lists a player twice";
+        j->players[j->n++] = players[k];
+    }
+    return j->n && !obs_map_ready() ? "the binary observation mapping could not be created" : NULL;
+}
+/* step's `observe`: a list of player slots */
+static const char *binary_list(yyjson_val *list, BinaryJob *j) {
+    int players[16], n = 0;
+    if (list && (!yyjson_is_arr(list) || yyjson_arr_size(list) > 16))
+        return "observe must be a list of player slots 0..15";
+    for (int k = 0; list && k < (int)yyjson_arr_size(list); k++) {
+        LONGLONG p;
+        if (!jr_is_int(yyjson_arr_get(list, k), &p) || p < 0 || p >= 16)
+            return "observe must be a list of player slots 0..15";
+        players[n++] = (int)p;
+    }
+    return binary_players(j, players, n);
+}
+static void write_binary(JW *w, const BinaryJob *j) {
+    jw_key(w, "observations");
+    jw_open(w, '[');
+    for (int i = 0; i < j->n; i++) {
+        jw_open(w, '{');
+        jw_key(w, "player");
+        jw_int(w, j->players[i]);
+        jw_key(w, "offset");
+        jw_uint(w, j->offset[i]);
+        jw_key(w, "size");
+        jw_uint(w, j->size[i]);
+        jw_close(w, '}');
+    }
+    jw_close(w, ']');
 }
 
 /* ---- act --------------------------------------------------------------------------------------- */
@@ -193,6 +268,7 @@ static void restart_job(void *a) {
     results_clear();
     stage_clear();
     metadata_clear();
+    obs_clear();
     setup_clear();
     g_status = ST_LAUNCHED;
     g_mode = 0;
@@ -205,8 +281,8 @@ static const char *restart_game(void) {
         return "the game thread did not restart the game";
     if (error)
         return error;
-    for (int i = 0; i < 300 && !g_held; i++)
-        Sleep_orig(100);
+    for (int i = 0; i < 6000 && !g_held; i++)
+        Sleep_orig(5);
     return g_held ? NULL : "the restarted map did not start in 30 s";
 }
 static void m_reset(JW *w, LONGLONG id) {
@@ -410,7 +486,13 @@ static void m_create_game(JW *w, LONGLONG id, yyjson_val *params) {
 }
 
 static HANDLE g_stepped; /* signalled by step_finish */
+/* The binary observations the running step writes as it finishes, on the game thread before it signals:
+ * no second trip to the game thread. Static, so a step that finishes after its request timed out writes
+ * nowhere stale. */
+static BinaryJob g_step_binary;
 void rpc_step_finished(void) {
+    if (g_step_binary.n && g_status != ST_LAUNCHED)
+        binary_job(&g_step_binary);
     if (g_stepped)
         SetEvent(g_stepped);
 }
@@ -427,6 +509,11 @@ static void m_step(JW *w, LONGLONG id, yyjson_val *params) {
     }
     if (!jr_is_int(yyjson_obj_get(params, "ms"), &ms) || ms <= 0 || ms > MAX_STEP_MS || ms % 25) {
         reply_error(w, id, "bad_params", "ms must be a multiple of 25 in 25..60000");
+        return;
+    }
+    const char *invalid = binary_list(yyjson_obj_get(params, "observe"), &g_step_binary);
+    if (invalid) {
+        reply_error(w, id, "bad_params", invalid);
         return;
     }
     DWORD before = game_time();
@@ -455,6 +542,13 @@ static void m_step(JW *w, LONGLONG id, yyjson_val *params) {
     jw_uint(w, game_time() - before);
     jw_key(w, "reason");
     jw_string(w, g_step_reason);
+    if (g_step_binary.n) {
+        if (!g_step_binary.ok) {
+            reply_error(w, id, "bad_status", "the binary observations did not fit the mapping");
+            return;
+        }
+        write_binary(w, &g_step_binary);
+    }
     jw_close(w, '}');
     jw_close(w, '}');
 }
@@ -478,6 +572,28 @@ static void m_observe(JW *w, LONGLONG id, yyjson_val *params) {
     }
     if (!player_param(params, 0, &player)) {
         reply_error(w, id, "bad_params", "player must be a slot 0..15");
+        return;
+    }
+    yyjson_val *format_val = yyjson_obj_get(params, "format");
+    const char *format = format_val ? yyjson_get_str(format_val) : "json";
+    if (!format || (strcmp(format, "json") != 0 && strcmp(format, "binary") != 0)) {
+        reply_error(w, id, "bad_params", "format must be json or binary");
+        return;
+    }
+    if (!strcmp(format, "binary")) {
+        BinaryJob binary;
+        int one = (int)player;
+        const char *error = binary_players(&binary, &one, 1);
+        if (error || !run_on_game_thread(binary_job, &binary, 5000) || !binary.ok) {
+            reply_error(w, id, "bad_status", error ? error : "the binary observation did not fit or was not written");
+            return;
+        }
+        reply_head(w, id, 1);
+        jw_key(w, "result");
+        jw_open(w, '{');
+        write_binary(w, &binary);
+        jw_close(w, '}');
+        jw_close(w, '}');
         return;
     }
     reply_head(w, id, 1);

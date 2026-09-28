@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .protocol import Action, ProtocolError, normalize_actions
+from .protocol import Action, ProtocolError, normalize_actions, own_unit_ids
 
 if TYPE_CHECKING:
     from .session import GameSession
@@ -28,7 +28,7 @@ class ControlGroups:
             obs = self._session.observations.get(self.player)
             if obs is None:
                 raise RuntimeError("call reset() before assigning groups")
-            own = {u["unit_id"] for u in obs["units"]}
+            own = own_unit_ids(obs)
             if not set(ids) <= own:
                 raise ProtocolError("group members must be currently observed own units")
             self._session._groups[self.player][name] = tuple(dict.fromkeys(ids))
@@ -38,7 +38,8 @@ class ControlGroups:
             with self._session._state_lock:
                 self._session._check_open()
             ids = self._session._groups[self.player][name]
-            own = {u["unit_id"] for u in self._session.observations.get(self.player, {}).get("units", [])}
+            obs = self._session.observations.get(self.player)
+            own = own_unit_ids(obs) if obs is not None else frozenset()
             # Keep stored IDs: workers may temporarily disappear inside mines/transports.
             return tuple(uid for uid in ids if uid in own)
 

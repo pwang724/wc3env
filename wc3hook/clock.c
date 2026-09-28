@@ -210,6 +210,13 @@ static MsgWaitFn MsgWait_orig;
 DWORD real_wait(HANDLE event, DWORD ms) {
     return WFSO_orig(event, ms);
 }
+/* Auto-reset: a step started or a job was posted. The frame loop's pacing wait also waits on it,
+ * so the game thread starts at once instead of at the end of its timeout. */
+static HANDLE g_wake;
+void clock_wake(void) {
+    if (g_wake)
+        SetEvent(g_wake);
+}
 /* Between steps the frame loop sits in its pacing wait (the wrapper 0x3c2ed0, called from the
  * loop at 0x44574a). RPC jobs are serviced there, and only there: any other wait is inside game
  * code with its own state half-built. The wrapper has other callers too (0x575dcb waits there
@@ -218,8 +225,18 @@ DWORD real_wait(HANDLE event, DWORD ms) {
  * pushed ebp, its two arguments and our return address, so its return address is 16 bytes up. */
 static DWORD WINAPI WFSO_hook(HANDLE h, DWORD ms) {
     if ((BYTE *)_ReturnAddress() == g_base + RVA_FRAME_WAIT_RET && g_game_tid && GetCurrentThreadId() == g_game_tid &&
-        *(BYTE **)((BYTE *)_AddressOfReturnAddress() + 16) == g_base + RVA_FRAME_LOOP_WAIT_RET)
+        *(BYTE **)((BYTE *)_AddressOfReturnAddress() + 16) == g_base + RVA_FRAME_LOOP_WAIT_RET) {
         rpc_service_jobs_between_frames();
+        DWORD timeout = scale_timeout(ms);
+        if (!timeout)
+            return WFSO_orig(h, 0);
+        HANDLE both[2] = {h, g_wake};
+        DWORD r = WFMO_orig(2, both, FALSE, timeout);
+        if (r != WAIT_OBJECT_0 + 1)
+            return r;
+        rpc_service_jobs_between_frames();
+        return WAIT_TIMEOUT; /* the loop checks the clock again */
+    }
     return WFSO_orig(h, scale_timeout(ms));
 }
 static DWORD WINAPI WFSOEx_hook(HANDLE h, DWORD ms, BOOL a) {
@@ -247,6 +264,18 @@ static void wait_init_hooks(void) {
 }
 
 void clock_init_hooks(void) {
+    /* Waits end on the system timer tick: 15.6 ms by default on Windows, which paced every hop of a
+     * step (the frozen game thread, the turn producer) at up to one tick. Wine already uses 1 ms.
+     * Windows 11 ignores the request, and may move the process to efficiency cores, for a process
+     * whose window is hidden; opt out of both (the call is absent before Windows 10 1709). */
+    typedef BOOL(WINAPI * SetInfoFn)(HANDLE, int, void *, DWORD);
+    SetInfoFn set_info = (SetInfoFn)GetProcAddress(GetModuleHandleA("kernel32"), "SetProcessInformation");
+    if (set_info) {
+        DWORD throttling[3] = {1, 0x1 | 0x4, 0}; /* version, EXECUTION_SPEED | IGNORE_TIMER_RESOLUTION, off */
+        set_info(GetCurrentProcess(), 4 /* ProcessPowerThrottling */, throttling, sizeof throttling);
+    }
+    timeBeginPeriod(1);
+    g_wake = CreateEventA(NULL, FALSE, FALSE, NULL);
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     g_qpc_freq = f.QuadPart;

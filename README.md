@@ -60,6 +60,23 @@ Map and agent slots are fixed at launch; `session.setup` reports the accepted co
 For independent games use `StepPool.launch(n, speed, config=...)`, or try the CLI:
 `python -m wc3env --instances 8 --steps 200 --speed 64`.
 
+For RL rollouts, use binary observations (numpy records read from shared memory, one round trip
+per step) and step many games asynchronously, one worker process each:
+
+```python
+from wc3env import GameConfig
+from wc3env.vector import VectorSession
+
+config = GameConfig(step_ms=250, render=False, observation="binary")
+with VectorSession([config] * 16) as games:
+    for i, observations in games.reset():
+        games.send(i, {0: []})
+    i, observations, done, info = games.recv()  # whichever game finished first
+```
+
+See [binary observations](docs/specs/observations.md#binary-observations) and
+[throughput](docs/compatibility.md#rollout-throughput); `tools/bench.py` measures a machine.
+
 Each game process writes logs and replays to its own directory (`game.data_dir`), by default
 under `%LOCALAPPDATA%/wc3env`. Choose another parent with
 `GameConfig(output_dir=...)` or `WC3_OUTPUT_DIR`; the explicit argument wins.

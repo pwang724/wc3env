@@ -10,7 +10,7 @@ Unfinished work only. [Design](design.md) describes implemented behavior;
 | Jev live policy | Realtime brief controller lives in `wc3agent/`; compare executed decisions across repeated runs. Other architectures remain future experiments. |
 | Pending construction placement | Sites of workers' current build orders and of earlier builds in the same act call count as occupied. A worker's Shift-queued builds after its current order are not read, so a later step can still pick their sites. No retry scheduler. |
 | Team metadata for activated slots | `players[].team` is `-1` for slots that `MatchSetup` activates beyond the lobby's own (relations and alliances are correct). Assign a team at setup or document `-1` as unassigned. |
-| Docker workers / Wine | Build from a user installation, mounted licenses, game smoke and agent probe passed. Next: longer runs, render-off and repeated resets. [Results](compatibility.md#linux--wine). |
+| Docker workers / Wine | Build from a user installation, mounted licenses, game smoke and agent probe passed. Next: `bench` throughput and memory with several games per container, render-off and repeated resets; compare one wineserver per game with a shared one, and kernels with ntsync. [Results](compatibility.md#linux--wine). |
 
 ## Next
 

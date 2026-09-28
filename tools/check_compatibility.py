@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools"))
 
 
 def dimensions(value):
@@ -63,31 +64,10 @@ def machine_info():
     return data
 
 
-class ProcessMemory(ctypes.Structure):
-    _fields_ = [("size", ctypes.c_ulong), ("faults", ctypes.c_ulong)] + [
-        (name, ctypes.c_size_t)
-        for name in (
-            "peak_working",
-            "working",
-            "peak_paged",
-            "paged",
-            "peak_nonpaged",
-            "nonpaged",
-            "pagefile",
-            "peak_pagefile",
-            "private",
-        )
-    ]
-
-
 def private_mib(game):
-    ps = ctypes.WinDLL("psapi", use_last_error=True)
-    ps.GetProcessMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.POINTER(ProcessMemory), ctypes.c_ulong]
-    memory = ProcessMemory()
-    memory.size = ctypes.sizeof(memory)
-    if not ps.GetProcessMemoryInfo(game._process_handle, ctypes.byref(memory), memory.size):
-        raise ctypes.WinError(ctypes.get_last_error())
-    return memory.private / 2**20
+    from winproc import MIB, memory
+
+    return memory(game._process_handle).private / MIB
 
 
 def window_dimensions(game):

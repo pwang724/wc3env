@@ -60,6 +60,8 @@
 #define FRAME_LOOP_LO 0x445630        /* the frame loop, for `profile` */
 #define FRAME_LOOP_HI 0x445a30
 #define RVA_GXPRESENT 0x3d1070       /* end of the frame function 0x559330 */
+#define RVA_PAINT 0x559330           /* cdecl frame paint handler (event 0x11); returns 1 */
+#define RVA_PAINT_PRESENT_FLAGS 0xce9a88 /* the flags it passes to GxPresent */
 #define RVA_GX_DEVICE 0xd4ab54       /* graphics backend singleton */
 #define RVA_GX_D3D9_VTABLE 0xaba2e0  /* Direct3D 9 backend */
 #define GX_D3D9_DEVICE 0x59c         /* IDirect3DDevice9* inside that backend */
@@ -97,7 +99,9 @@
 #define RVA_N_PLAYERCONTROL 0x094560       /* GetPlayerController (Hplayer;)Hmapcontrol; */
 #define RVA_N_PAUSECOMPAI 0x0a3e60         /* PauseCompAI (Hplayer;B)V */
 #define RVA_N_PLAYERSLOTSTATE 0x094980     /* GetPlayerSlotState (Hplayer;)Hplayerslotstate; */
-#define RVA_N_ISVISIBLE 0x09a4a0           /* IsVisibleToPlayer (RRHplayer;)B; read-only point fog query */
+#define RVA_FOG_WORLD 0xd3b6f4             /* IsVisibleToPlayer's (0x9a4a0) world global; +0x34 is the fog map */
+#define RVA_FOG_QUERY 0x09a420             /* thiscall fog->visible(x, y, z, player bits), callee cleans */
+#define RVA_FOG_QUERY_Z 0xd2d88c           /* the z the native passes */
 #define RVA_N_REMOVEPLAYER 0x0a51c0        /* (Hplayer;Hplayergameresult;)V: what melee victory and defeat call */
 #define RVA_HANDLE_OBJECT 0x083940         /* cdecl(Hunit) -> unit object: the lookup every unit native starts with */
 #define RVA_PLAYER_OBJECT 0x082770         /* cdecl(Hplayer) -> player object */
@@ -143,7 +147,7 @@ extern BYTE *g_game; /* GameUpdate's this, once seen */
 extern DWORD g_game_tid;
 extern volatile LONG g_stepmode, g_stepping, g_held;
 extern DWORD g_step_target;
-extern volatile LONG g_render, g_pktlog, g_wait_floor;
+extern volatile LONG g_render, g_pktlog, g_steplog, g_wait_floor;
 extern volatile LONG g_trace, g_trace_n;
 extern int g_watch_skip_game, g_watch_hits;
 extern double g_speed;
@@ -168,6 +172,7 @@ DWORD WINAPI pipe_thread(LPVOID arg);
 /* ---- clock.c ---------------------------------------------------------------------------------- */
 LONGLONG real_qpc(void);
 DWORD real_wait(HANDLE event, DWORD ms);
+void clock_wake(void);
 void clock_set_speed(double s);
 void clock_freeze(int on);
 void clock_init_hooks(void);
@@ -183,6 +188,8 @@ void step_restart(void);
 extern const char *g_step_reason;
 void step_init_hooks(void);
 extern volatile LONG g_frames_seen;
+
+#include "obsbin.h"
 
 /* ---- observe.c -------------------------------------------------------------------------------- */
 typedef void(__cdecl *EnumObjectsFn)(int cls, void *cb, void *ctx, int zero);
@@ -207,6 +214,8 @@ float bits_to_f(int i);
 int unit_hero_level(BYTE *u);
 unsigned obs_id(BYTE *o);                        /* the RPC's id of a unit or item: the game's own object id [o+0xc] */
 void obs_write_json(JW *w, int player, int seq); /* game thread snapshot */
+DWORD obs_write_binary(BYTE *dst, DWORD cap, int player, int seq); /* obsbin.h; 0 if over cap */
+void obs_clear(void); /* the map is reloading */
 const char *player_result(int jass_id);          /* "", "victory" or "defeat", from the game's own RemovePlayer */
 void result_init_hooks(void);
 void results_clear(void);
@@ -214,7 +223,8 @@ int agents_finished(void);
 
 /* ---- metadata.c ----------------------------------------------------------------------------- */
 void metadata_clear(void);
-void metadata_write(JW *w, int observer);
+void metadata_write(JW *w, int observer, const int score[25]); /* score: metadata_scores */
+void metadata_scores(int observer, int score[25]);
 
 /* ---- setup.c -------------------------------------------------------------------------------- */
 void setup_init_hooks(void);
@@ -225,7 +235,8 @@ int setup_random_race(int player);
 void setup_write(JW *w);
 
 /* ---- events.c --------------------------------------------------------------------------------- */
-unsigned emit_events(JW *w, int player); /* returns the number lost to ring overflow */
+unsigned events_gather(BB *out, int player); /* BinEvent records; returns the number lost to ring overflow */
+void events_json(JW *w, const BinEvent *events, size_t n);
 void events_set_players(unsigned mask);  /* create_game: the players events are judged for; empties the log */
 void events_init_hooks(void);
 

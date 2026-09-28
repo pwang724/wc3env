@@ -59,6 +59,17 @@ For environment runs, select another bundled map with
 `-e WC3_MAP='Maps/FrozenThrone/(4)TurtleRock.w3x'` before the image name, or pass
 `map=` to `GameConfig` in your own Python runner.
 
+`bench` runs [`tools/bench.py`](../tools/bench.py) under Wine and adds the container's Linux CPU
+(wineserver and Xvfb included) to `linux-cpu.json` in the session directory; `profile` runs
+`tools/profile_game.py`. Arguments pass through, for example `bench --instances 4 --episodes 2`.
+`--prefixes N` splits the games over N Wine prefixes, each with its own wineserver: without ntsync
+one wineserver stops scaling at about four games, and two games per prefix measured best
+([throughput](../docs/compatibility.md#rollout-throughput)).
+
+[`modal_run.py`](modal_run.py) runs the same image on Modal VM sandboxes. Modal's builder cannot
+run Wine, so it builds with `--build-arg INIT_WINE=0` and initializes the prefix once with the
+entrypoint's `init` mode in a sandbox, whose snapshot becomes the worker image.
+
 The agent runs with `run`, for example `run scenarios --jobs 1` or `run melee --hidden`. Pass the model keys
 (`-e OPENAI_API_KEY -e TYPESAFE_API_KEY -e MACRO_PROVIDER -e MACRO_MODEL`) from the host environment, not the
 repository's whole `.env`, and drop `--network none`. Without the `/sessions` mount, output is lost when the container is removed.

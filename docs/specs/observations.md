@@ -86,6 +86,33 @@ The host wrapper adds `ticks_skipped`: `max(0, int(elapsed_seconds) - 1)` in rea
 
 Regenerate the example with `python tools/example_observation.py`.
 
+## Binary observations
+
+`GameConfig(observation="binary")` returns `wc3env.binary.BinaryObservation` objects instead of
+dictionaries (`pip install wc3env[binary]` for numpy). The DLL writes fixed-size records into the
+shared memory mapping `Local\wc3hook-obs-<pid>`, as BWAPI's client reads its game data: nothing
+is formatted or parsed, and a session step observes every agent slot in the same round trip as the
+step. Computer players are not observed; `session.game.rpc.observe_binary(slot)` reads one on request. Layouts are in [`wc3hook/obsbin.h`](../../wc3hook/obsbin.h) and
+[`binary.py`](../../src/wc3env/binary.py); arrays are copies that stay valid after later steps.
+
+| Attribute | Contents |
+|---|---|
+| `player`, `sequence`, `game_time_seconds` | As in JSON; `sequence` is shared with JSON observations |
+| `gold`, `lumber`, `food_used`, `food_cap`, `result`, `events_lost`, `score` | As in JSON |
+| `units` | Every own unit, including those inside a mine, building or transport (flag `INSIDE`), and every other visible unit: `unit_id, type_id, owner, x, y, hp, max_hp, mana, max_mana, flags, level, order_id, order_target, order_x, order_y, state, state_seconds, queue_seconds`. `flags` combines `OWN`, `STRUCTURE`, `HERO`, `INSIDE`. Order and production fields are set for own units only; `order_target` is `0xffffffff` for a point order; `state` indexes `STATES` |
+| `abilities` | Own units' learned abilities: `unit_id, ability_id, level, mana_cost, cooldown_seconds, cooldown_remaining` |
+| `buffs` | `unit_id, buff_id` for every listed unit |
+| `queue` | Own structures' production queue: `unit_id, slot, type_id`, slot 0 in progress |
+| `inventory` | `unit_id, slot, type_id, charges` |
+| `items` | Visible ground items: `item_id, type_id, x, y` |
+| `destructables` | Visible living destructables: `id, type_id, x, y, hp, flags` (`LUMBER`, `INVULNERABLE`) |
+| `events` | `kind` (engine event id; `EVENT_KINDS` names it), `unit_id`, `other_id`, `type_id`, `value`. `unit_id`, `other_id` and `type_id` are the JSON event's fields in order (`other_id` is `trained_id`, `summoned_id`, `item_id`, `buyer_id` or `attacker_id`; `type_id` is also an `ability_id`); `value` is a death's owner or a hero level |
+
+Ids are integers; `fourcc()` turns a type, ability, buff or build-order id into its four characters.
+Order ids are the engine's (a build order's id is the structure's type id). `players`, `map` and `chat`
+are JSON only: read them with `session.game.rpc.observe(player)` when needed, for example after reset.
+Unit ordering, positions and values match the JSON observation of the same state.
+
 ## Observation metadata
 
 Every observation includes `players`, `map`, and the observer's `score`. These are

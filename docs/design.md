@@ -81,7 +81,11 @@ connection subscriptions after dispatch unwinds. Live text caches retain their b
 QPC, GetTickCount, FILETIME and the `rdtsc` helper (`0x396c80`) share a virtual clock.
 Seqlock readers avoid blocking timer calls inside other libraries. Integer conversions
 divide before multiplying to avoid overflow. Speed scales finite waits; frozen waits keep
-a 1 ms floor. RPC deadlines use real time.
+a 1 ms floor. RPC deadlines use real time. The hook requests 1 ms timer resolution and opts out
+of Windows power throttling: at the default 15.6 ms tick, the frozen game thread and the turn
+producer each woke up to one tick late, which made a 250 ms step cost 15-25 ms of waiting for
+about 1 ms of simulation. A step or a posted job also sets a wake event that the frame loop's
+pacing wait includes, so the game thread starts at once.
 
 `GameUpdate` (`0x1aefd0`) consumes 25 ms turns. Stepping writes pending time and passes zero
 elapsed time to bypass the lag clamp. Publish the producer budget after actions flush.
@@ -133,9 +137,15 @@ Window policy is fixed per process and survives resets. Background mode requires
 `game.offscreen()` reposition without requesting focus.
 Resize requests are asynchronous and can be clamped by Warcraft's minimum window size.
 
-`render=False` suppresses **Direct3D 9 Present** but completes GPU work through an event
-query. Draw calls and `GxPresent` cleanup remain active.
-Leaving GPU work pending retained buffers; skipping cleanup retained textures.
+`render=False` skips the frame's paint handler (`0x559330`) once the match is held, so no
+scene, UI or text is drawn; that drawing cost most of the game thread even without
+presentation. The simulation never depends on drawing: a minimized multiplayer client takes
+the handler's own no-draw path and stays in lockstep, and observations match render-on runs
+step for step. `GxPresent` still runs, at most 30 times a real second, for backend cleanup and
+FPU control restoration; its **Direct3D 9 Present** is suppressed and GPU work is completed
+through an event query. Map loading still paints: the match does not start its clock until
+the loading screen has drawn. Leaving GPU work pending retained buffers; skipping cleanup
+retained textures.
 A window and graphics device are still required. `debug("render", on=0)` uses the same
 hook. Other backends must keep `render=True`; requesting render-off exits
 with `render off requires the Direct3D 9 backend` in the hook log.
@@ -165,7 +175,10 @@ fixture matches playback. The [compatibility matrix](compatibility.md) bounds th
 Run artifacts stay ignored; deliberate regression fixtures are tracked. Pending work belongs in the roadmap.
 
 Native tools: `tools/disasm.py`, `imports.py`, `natives.py`.
-Pipe probes: `where`, `profile`, `watch`, `scan`, `dump`, `trace`, `pktlog`.
+Pipe probes: `where`, `profile`, `watch`, `scan`, `dump`, `trace`, `pktlog`, `steplog`
+(timeline of the next n steps: request, turn production and delivery, finish; in the hook log).
+`tools/bench.py` and `tools/profile_game.py` measure rollout throughput, memory and where the
+game spends CPU, on Windows and under Wine.
 Native calls use 32-bit argument slots, float pointers for real arguments and bits for real
 returns. Staging may allocate VM handles (`0x077710`, `0x4e72c0`); object enumeration must not.
 The bounds cache uses one temporary rectangle per episode and releases it immediately.

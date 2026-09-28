@@ -8,6 +8,7 @@ if [ "${1:-environment}" = environment ]; then
     timeout 240s wine 'Z:\opt\python-installer.exe' /quiet InstallAllUsers=0 \
         'TargetDir=C:\Python311' Include_launcher=0 Include_test=0 Include_doc=0 \
         Include_tcltk=0 Include_pip=1
+    ln -sfn /opt/game "$WINEPREFIX/drive_c/wc3"
 fi
 for wheel in /opt/wheels/"${1:-environment}"/*.whl; do
     timeout 120s wine "$python" -m pip install --no-index --no-deps "$(winepath -w "$wheel")"

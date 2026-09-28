@@ -6,7 +6,9 @@ COPY src/wc3env/ src/wc3env/
 COPY wc3agent/ wc3agent/
 COPY wc3hook/ wc3hook/
 RUN python -m pip wheel --no-deps --wheel-dir /wheels/environment . \
-    && python -m pip wheel --no-deps --wheel-dir /wheels/agent ./wc3agent
+    && python -m pip wheel --no-deps --wheel-dir /wheels/agent ./wc3agent \
+    && python -m pip download --no-deps --only-binary=:all: --platform win_amd64 --python-version 3.11 \
+       --dest /wheels/environment "numpy>=1.24,<3"
 
 FROM ubuntu:24.04 AS environment
 ARG WINE_VERSION=11.0.0.0~noble-1
@@ -28,7 +30,7 @@ RUN curl -fsSL https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe 
 RUN groupadd --gid 10001 worker \
     && useradd --uid 10001 --gid 10001 --create-home worker \
     && mkdir -p /work /sessions && chown 10001:10001 /work /sessions
-COPY docker/*.sh docker/*.py /opt/worker/
+COPY docker/*.sh docker/*.py tools/bench.py tools/profile_game.py tools/winproc.py /opt/worker/
 COPY --from=wheels /wheels/environment/ /opt/wheels/environment/
 ENV DISPLAY=:99 WINEPREFIX=/home/worker/.wine WINEARCH=wow64 \
     WINEDLLOVERRIDES="mscoree,mshtml=" WINEDEBUG=-all \
@@ -36,10 +38,12 @@ ENV DISPLAY=:99 WINEPREFIX=/home/worker/.wine WINEARCH=wow64 \
     PYTHONUNBUFFERED=1
 USER 10001:10001
 WORKDIR /work
-RUN bash /opt/worker/with-display.sh bash /opt/worker/install.sh
-COPY --chown=10001:10001 assets/game/ /opt/game/
+# Wine runs 32-bit code, which some image builders cannot (Modal's): INIT_WINE=0 leaves the prefix
+# for the first container to initialize with install.sh (docker/modal_run.py snapshots it).
+ARG INIT_WINE=1
+RUN if [ "$INIT_WINE" = 1 ]; then bash /opt/worker/with-display.sh bash /opt/worker/install.sh; fi
 # The initialized prefix lives in each container's private writable layer.
-RUN ln -s /opt/game "$WINEPREFIX/drive_c/wc3"
+COPY --chown=10001:10001 assets/game/ /opt/game/
 ENTRYPOINT ["bash", "/opt/worker/with-display.sh", "bash", "/opt/worker/entrypoint.sh"]
 CMD ["smoke"]
 
@@ -47,4 +51,5 @@ CMD ["smoke"]
 FROM environment AS agent
 COPY --from=wheels /wheels/agent/ /opt/wheels/agent/
 COPY wc3agent/src/wc3agent/game/data/ /opt/prepared/
-RUN bash /opt/worker/with-display.sh bash /opt/worker/install.sh agent
+ARG INIT_WINE=1
+RUN if [ "$INIT_WINE" = 1 ]; then bash /opt/worker/with-display.sh bash /opt/worker/install.sh agent; fi

@@ -141,8 +141,10 @@ class RpcClient:
     def create_game(self, map: str, players: list[dict], mode: str = "stepping") -> dict:
         return self.call("create_game", map=map, players=players, mode=mode)
 
-    def step(self, ms: int) -> dict:
-        return self.call("step", ms=ms)
+    def step(self, ms: int, observe: list[int] | None = None) -> dict:
+        """Advance ms; with `observe`, also write those players' binary observations (binary.py) and
+        return their offsets in `observations`, in one round trip."""
+        return self.call("step", ms=ms, observe=observe) if observe else self.call("step", ms=ms)
 
     def reset(self) -> dict:
         return self.call("reset")
@@ -153,6 +155,10 @@ class RpcClient:
 
     def observe(self, player: int = 0) -> dict:
         return self.call("observe", player=player)
+
+    def observe_binary(self, player: int = 0) -> dict:
+        """Write the player's binary observation (binary.py); returns its offset in `observations`."""
+        return self.call("observe", player=player, format="binary")
 
     def act(self, player: int, actions: list[dict]) -> dict:
         return self.call("act", player=player, actions=actions)

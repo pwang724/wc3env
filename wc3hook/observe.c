@@ -57,36 +57,24 @@ __declspec(naked) BYTE *__cdecl unit_owner(BYTE *u) {
     }
 }
 /* GetPlayerId's body after its handle step: the internal slot (byte +0x30), mapped 24..27 ->
- * 12..15 for maps whose script version is below 0x17ac (the neutral players on legacy maps) */
+ * 12..15 for maps whose script version is below 0x17ac (the neutral players on legacy maps).
+ * The version is the loaded map's, read once per map (obs_clear forgets it on reload): every unit an
+ * observation lists, every event and every order asks, and the read goes through the JASS VM. */
 BYTE *g_vm_global, *g_fn_ctx, *g_fn_ver;
-__declspec(naked) int __cdecl player_jass_id(BYTE *pl) {
-    __asm {
-        push ebp
-        mov ebp, esp
-        push esi
-        mov eax, [ebp + 8]
-        movzx esi, byte ptr [eax + 0x30]
-        mov eax, dword ptr [g_vm_global]
-        mov eax, [eax]
-        mov ecx, [eax + 0x30]
-        lea ecx, [ecx + 0x24]
-        call dword ptr [g_fn_ctx]
-        push eax
-        call dword ptr [g_fn_ver]
-        add esp, 4
-        cmp eax, 0x17ac
-        jae keep
-        lea eax, [esi - 0x18]
-        cmp eax, 3
-        lea eax, [esi - 0xc]
-        jbe done
-    keep:
-        mov eax, esi
-    done:
-        pop esi
-        pop ebp
-        ret
-    }
+static int g_script_version = -1;
+static int map_script_version(void) {
+    if (!g_game)
+        return script_version(); /* no map yet */
+    if (g_script_version < 0)
+        g_script_version = script_version();
+    return g_script_version;
+}
+void obs_clear(void) {
+    g_script_version = -1;
+}
+int __cdecl player_jass_id(BYTE *pl) {
+    int slot = pl[0x30];
+    return (unsigned)(slot - 24) <= 3 && (unsigned)map_script_version() < 0x17ac ? slot - 12 : slot;
 }
 /* IsUnitVisible(u, p): unit->vtbl[0xfc/4](player slot, 0, 4), callee cleans (thiscall, 3 args) */
 __declspec(naked) int __cdecl unit_visible(BYTE *u, int player_slot) {
@@ -188,15 +176,29 @@ unsigned obs_id(BYTE *o) {
     return *(DWORD *)(o + 0xc);
 }
 
-/* One observation in the making: the observer and the JSON arrays its callbacks fill. */
+/* One observation in the making: the tables of obsbin.h, filled once by the enumeration callbacks. The
+ * binary observation copies them out; the JSON observation is formatted from them. */
 typedef struct {
-    int player, slot, player_handle; /* JASS id, internal fog slot, read-only player handle */
-    JW own, inside, others, inventory, items, destructables;
+    int player, slot; /* JASS id, internal fog slot */
+    BB t[OBS_TABLES];
 } Obs;
+static const DWORD RECORD_SIZE[OBS_TABLES] = {sizeof(BinUnit),     sizeof(BinAbility),   sizeof(BinBuff),
+                                              sizeof(BinQueue),    sizeof(BinInventory), sizeof(BinItem),
+                                              sizeof(BinDestructable), sizeof(BinEvent)};
+#define RECORDS(o, table, type) ((const type *)(o)->t[table].p)
+#define COUNT(o, table) ((o)->t[table].n / RECORD_SIZE[table])
 
-static int point_visible(float x, float y, int player_handle) {
-    typedef int(__cdecl * VisibleFn)(const float *, const float *, int);
-    return NATIVE(RVA_N_ISVISIBLE, VisibleFn)(&x, &y, player_handle);
+/* IsVisibleToPlayer (0x9a4a0) after its handle step: the fog map's point query with the player's
+ * bit. Observations test every destructable, so skipping the Player native and handle lookup
+ * per test matters. Slots past 15 (legacy neutral ids) get no bit, as the native's 16-bit shift. */
+static int point_visible(float x, float y, int slot) {
+    typedef int(__fastcall * FogQueryFn)(BYTE *, void *, float, float, float, int);
+    BYTE *world = *(BYTE **)(g_base + RVA_FOG_WORLD);
+    BYTE *fog = world ? *(BYTE **)(world + 0x34) : NULL;
+    if (!fog)
+        return 0;
+    float z = *(float *)(g_base + RVA_FOG_QUERY_Z);
+    return ((FogQueryFn)(g_base + RVA_FOG_QUERY))(fog, NULL, x, y, z, slot < 16 ? 1 << slot : 0);
 }
 
 /* GetDestructableLife: dead if vtbl[0x13c](d) is nonzero, else life from vtbl[0x12c](d, &out) */
@@ -236,38 +238,29 @@ int object_visible(BYTE *object, int cls, int player) {
     if (cls == ITEM_CLASS && !item_on_ground(object))
         return 0;
     float x = bits_to_f(unit_xy_bits(object, 0)), y = bits_to_f(unit_xy_bits(object, 4));
-    return point_visible(x, y, NATIVE(RVA_N_PLAYER, NativeI_I)(player));
+    return point_visible(x, y, player_slot(player));
 }
 static int __cdecl obs_destructable_cb(BYTE *d, void *ctx) {
     Obs *o = (Obs *)ctx;
-    if (destr_dead(d) || bits_to_f(destr_life_bits(d)) <= 0 || !object_visible(d, DESTRUCTABLE_CLASS, o->player))
+    float hp;
+    if (destr_dead(d) || (hp = bits_to_f(destr_life_bits(d))) <= 0 || !object_visible(d, DESTRUCTABLE_CLASS, o->player))
         return 1;
-    float x = bits_to_f(unit_xy_bits(d, 0)), y = bits_to_f(unit_xy_bits(d, 4));
-    JW *w = &o->destructables;
-    jw_open(w, '{');
-    jw_key(w, "id");
-    jw_uint(w, obs_id(d));
-    jw_key(w, "type_id");
-    jw_fourcc(w, *(DWORD *)(d + 0x34));
-    jw_key(w, "x");
-    jw_num(w, x);
-    jw_key(w, "y");
-    jw_num(w, y);
-    jw_key(w, "hp");
-    jw_num(w, bits_to_f(destr_life_bits(d)));
-    /* The engine's destructable target-mask getter reads the loaded object-data
-     * row (including custom types).
-     * 0x40 is the tree target class, not a type-ID list. */
+    /* The engine's destructable target-mask getter reads the loaded object-data row (including custom
+     * types). 0x40 is the tree target class, not a type-ID list. */
     typedef DWORD(__fastcall * TargetMaskFn)(BYTE *, void *);
     DWORD targets = ((TargetMaskFn)(g_base + 0x2ce930))(d, NULL);
-    jw_key(w, "resource");
-    if (targets & 0x40)
-        jw_string(w, "lumber");
-    else
-        jw_null(w);
-    jw_key(w, "invulnerable");
-    jw_bool(w, (*(DWORD *)(d + 0x20) & 8) != 0);
-    jw_close(w, '}');
+    BinDestructable r = {obs_id(d), *(DWORD *)(d + 0x34), bits_to_f(unit_xy_bits(d, 0)), bits_to_f(unit_xy_bits(d, 4)),
+                         hp, ((targets & 0x40) ? BD_LUMBER : 0) | ((*(DWORD *)(d + 0x20) & 8) ? BD_INVULNERABLE : 0)};
+    bb_push(&o->t[T_DESTRUCTABLES], &r, sizeof r);
+    return 1;
+}
+static int __cdecl obs_item_cb(BYTE *it, void *ctx) {
+    Obs *o = (Obs *)ctx;
+    if (!item_on_ground(it))
+        return 1;
+    BinItem r = {obs_id(it), *(DWORD *)(it + 0x34), bits_to_f(unit_xy_bits(it, 0)), bits_to_f(unit_xy_bits(it, 4))};
+    if (point_visible(r.x, r.y, o->slot))
+        bb_push(&o->t[T_ITEMS], &r, sizeof r);
     return 1;
 }
 
@@ -294,86 +287,28 @@ static __declspec(naked) DWORD __cdecl ability_tag(BYTE *ability) {
     }
 }
 /* The unit's current order, as GetUnitCurrentOrder (0x973a0) reads it: the pair at u+0x3a8 -> the order
- * object, id at +0x24. The same object holds the point at +0x48/+0x50 and the target's pair at +0x58,
- * whose first word is the target's object id (measured on harvest gold/tree, move and build). A build
- * order's id is the structure's type id, so ids outside the order table are written as four characters. */
-int unit_order_point(BYTE *u, unsigned *id, float *x, float *y) {
+ * object, id at +0x24, or NULL when idle. The same object holds the point at +0x48/+0x50 and the target's
+ * pair at +0x58, whose first word is the target's object id (measured on harvest gold/tree, move and
+ * build). A build order's id is the structure's type id. */
+static BYTE *current_order(BYTE *u) {
     BYTE *ord = pair_object(u + 0x3a8);
-    if (!ord || !*(DWORD *)(ord + 0x24))
+    return ord && *(DWORD *)(ord + 0x24) ? ord : NULL;
+}
+int unit_order_point(BYTE *u, unsigned *id, float *x, float *y) {
+    BYTE *ord = current_order(u);
+    if (!ord)
         return 0;
     *id = *(DWORD *)(ord + 0x24);
     *x = *(float *)(ord + 0x48);
     *y = *(float *)(ord + 0x50);
     return 1;
 }
-static void write_order(JW *w, BYTE *u) {
-    BYTE *ord = pair_object(u + 0x3a8);
-    unsigned id = ord ? *(DWORD *)(ord + 0x24) : 0;
-    jw_key(w, "order");
-    if (!id) {
-        jw_null(w);
-        return;
-    }
-    jw_open(w, '{');
-    jw_key(w, "name");
-    const char *name = id == 851970u ? "harvest" : NULL; /* the harvest command's own id (act.c O_HARVEST) */
-    for (size_t i = 0; i < sizeof ORDER_NAMES / sizeof ORDER_NAMES[0] && !name; i++)
-        if (ORDER_NAMES[i].id == id)
-            name = ORDER_NAMES[i].name;
-    if (name)
-        jw_string(w, name);
-    else if (id >> 24)
-        jw_fourcc(w, id);
-    else
-        jw_uint(w, id);
-    jw_key(w, "target_id");
-    if (*(DWORD *)(ord + 0x58) != 0xffffffff)
-        jw_uint(w, *(DWORD *)(ord + 0x58));
-    else
-        jw_null(w);
-    jw_key(w, "x");
-    jw_num(w, *(float *)(ord + 0x48));
-    jw_key(w, "y");
-    jw_num(w, *(float *)(ord + 0x50));
-    jw_close(w, '}');
-}
-/* A structure's production, from its ability chain (u+0x3e8, next at +0x24; the walk
- * UnitSetConstructionProgress 0x2d8bc0 does): 'ABnP' while under construction and 'AUnP' while upgrading
- * to another structure, each with the total seconds at +0x7c; 'Aque' holds the queued unit and research
- * type ids from +0xa8, front first, zero after the last, and the front item's total seconds at +0x7c. */
-static void write_production(JW *w, BYTE *u) {
-    BYTE *queue = NULL;
-    const char *state = NULL;
-    float seconds = 0;
-    int n = 0;
-    for (BYTE *a = pair_object(u + 0x3e8); a && n < 64; a = pair_object(a + 0x24), n++) {
-        DWORD tag = ability_tag(a);
-        if (tag == 'Aque')
-            queue = a;
-        else if (tag == 'ABnP' || tag == 'AUnP') {
-            state = tag == 'ABnP' ? "constructing" : "upgrading";
-            seconds = *(float *)(a + 0x7c);
-        }
-    }
-    jw_key(w, "state");
-    if (state)
-        jw_string(w, state);
-    else
-        jw_null(w);
-    jw_key(w, "state_seconds");
-    jw_num(w, seconds);
-    jw_key(w, "queue");
-    jw_open(w, '[');
-    for (int i = 0; queue && i < 7 && *(DWORD *)(queue + 0xa8 + 4 * i); i++)
-        jw_fourcc(w, *(DWORD *)(queue + 0xa8 + 4 * i));
-    jw_close(w, ']');
-    jw_key(w, "queue_seconds");
-    jw_num(w, queue && *(DWORD *)(queue + 0xa8) ? *(float *)(queue + 0x7c) : 0);
-}
 
-/* Every ability on the unit's chain that it has learned, with the live numbers the natives give:
- * the same walk as write_production. Internal abilities (movement, inventory, production) are on the
- * chain too; the client tells them apart by id. Nothing here says whether a cast would succeed. */
+/* Abilities and buffs: every ability the unit has learned, with the live numbers the natives give, and
+ * the buffs on any unit in view. Both sit on the unit's ability chain (u+0x3e8, next at +0x24), buff ids
+ * starting with B ('Bprg' purged, 'Bblo' bloodlust). Internal abilities (movement, inventory, production)
+ * are on the chain too; the client tells them apart by id. Nothing here says whether a cast would succeed,
+ * and a buff's remaining time is not read. */
 typedef int(__cdecl *NativeI_HI)(int, int);
 typedef int(__cdecl *NativeI_HII)(int, int, int);
 /* The class tag is the ability's base class ('Aprg'); a variant the unit actually has (the Shaman's 'Apg2',
@@ -407,171 +342,95 @@ static int variant_id(BYTE *a, int handle, DWORD *aid, int buff) {
     }
     return 0;
 }
-static void write_abilities(JW *w, BYTE *u) {
-    int handle = handle_of(u);
-    jw_key(w, "abilities");
-    jw_open(w, '[');
-    int n = 0;
-    for (BYTE *a = handle ? pair_object(u + 0x3e8) : NULL; a && n < 64; a = pair_object(a + 0x24), n++) {
-        DWORD aid = ability_tag(a);
-        if ((BYTE)(aid >> 24) == 'B')
-            continue; /* a buff: write_buffs */
-        int level = NATIVE(RVA_N_UNITABILITYLEVEL, NativeI_HI)(handle, (int)aid);
-        if (level <= 0)
-            level = variant_id(a, handle, &aid, 0);
-        if (level <= 0)
-            continue;
-        jw_open(w, '{');
-        jw_key(w, "ability_id");
-        jw_fourcc(w, aid);
-        jw_key(w, "level");
-        jw_int(w, level);
-        jw_key(w, "mana_cost");
-        jw_int(w, NATIVE(RVA_N_ABILITYMANACOST, NativeI_HII)(handle, (int)aid, level));
-        jw_key(w, "cooldown_seconds");
-        jw_num(w, bits_to_f(NATIVE(RVA_N_ABILITYCOOLDOWN, NativeI_HII)(handle, (int)aid, level)));
-        jw_key(w, "cooldown_remaining");
-        jw_num(w, bits_to_f(NATIVE(RVA_N_ABILITYCOOLDOWNLEFT, NativeI_HI)(handle, (int)aid)));
-        jw_close(w, '}');
-    }
-    jw_close(w, ']');
-}
-
-/* The buffs on a unit, any unit in view: buffs sit on the same chain as abilities, their ids start with B
- * ('Bprg' purged, 'Bblo' bloodlust, 'BOae' endurance aura). A variant buff is found as variant_id finds
- * a variant ability. How long each has left is not read here. */
-static void write_buffs(JW *w, BYTE *u) {
-    int handle = 0; /* looked up at the first buff: most units have none */
-    jw_key(w, "buffs");
-    jw_open(w, '[');
-    int n = 0;
+/* One walk of the chain: buffs of any unit, and for the observer's own units also abilities and a
+ * structure's production: 'ABnP' while under construction and 'AUnP' while upgrading to another structure,
+ * each with the total seconds at +0x7c; 'Aque' holds the queued unit and research type ids from +0xa8, front
+ * first, zero after the last, and the front item's total seconds at +0x7c (the walk
+ * UnitSetConstructionProgress 0x2d8bc0 does). */
+static void gather_chain(Obs *o, BYTE *u, BinUnit *r) {
+    int own = (r->flags & BU_OWN) != 0, handle = 0, n = 0; /* the handle is looked up only when needed */
+    BYTE *queue = NULL;
     for (BYTE *a = pair_object(u + 0x3e8); a && n < 64; a = pair_object(a + 0x24), n++) {
-        DWORD bid = ability_tag(a);
-        if ((BYTE)(bid >> 24) != 'B')
+        DWORD id = ability_tag(a);
+        int buff = (BYTE)(id >> 24) == 'B';
+        if (!buff && !own)
             continue;
+        if (own && (r->flags & BU_STRUCTURE) && (id == 'Aque' || id == 'ABnP' || id == 'AUnP')) {
+            if (id == 'Aque')
+                queue = a;
+            else {
+                r->state = id == 'ABnP' ? 1 : 2;
+                r->state_seconds = *(float *)(a + 0x7c);
+            }
+        }
         if (!handle && !(handle = handle_of(u)))
             break;
-        if (NATIVE(RVA_N_UNITABILITYLEVEL, NativeI_HI)(handle, (int)bid) <= 0 && variant_id(a, handle, &bid, 1) <= 0)
+        int level = NATIVE(RVA_N_UNITABILITYLEVEL, NativeI_HI)(handle, (int)id);
+        if (level <= 0 && (level = variant_id(a, handle, &id, buff)) <= 0)
             continue;
-        jw_fourcc(w, bid);
+        if (buff) {
+            BinBuff b = {r->unit_id, id};
+            bb_push(&o->t[T_BUFFS], &b, sizeof b);
+        } else {
+            BinAbility b = {r->unit_id, id, level, NATIVE(RVA_N_ABILITYMANACOST, NativeI_HII)(handle, (int)id, level),
+                            bits_to_f(NATIVE(RVA_N_ABILITYCOOLDOWN, NativeI_HII)(handle, (int)id, level)),
+                            bits_to_f(NATIVE(RVA_N_ABILITYCOOLDOWNLEFT, NativeI_HI)(handle, (int)id))};
+            bb_push(&o->t[T_ABILITIES], &b, sizeof b);
+        }
     }
-    jw_close(w, ']');
+    for (DWORD i = 0; queue && i < 7 && *(DWORD *)(queue + 0xa8 + 4 * i); i++) {
+        BinQueue q = {r->unit_id, i, *(DWORD *)(queue + 0xa8 + 4 * i)};
+        bb_push(&o->t[T_QUEUE], &q, sizeof q);
+    }
+    r->queue_seconds = queue && *(DWORD *)(queue + 0xa8) ? *(float *)(queue + 0x7c) : 0;
 }
 
 static int __cdecl obs_unit_cb(BYTE *u, void *ctx) {
     Obs *o = (Obs *)ctx;
     float life = bits_to_f(unit_state_bits(u, 0));
-    BYTE *pl = unit_owner(u);
-    int owner = pl ? player_jass_id(pl) : -1;
     if (life <= 0)
         return 1;
+    BYTE *pl = unit_owner(u);
+    int owner = pl ? player_jass_id(pl) : -1;
     /* what GroupEnumUnitsInRect leaves out: hidden ([u+0x20] & 1; a worker in a mine is), in a transport (UF_LOADED),
      * and a locust ([u+0x20] bit 2 clear: 0x064c on uloc against 0x...e on every other unit surveyed, 25 kinds;
      * the flag word cannot tell a locust from a gryphon, both are 0x20001001). A wisp in an entangled mine
      * also has bit 2 clear, but is loaded (0x191405 / 0x1018); a locust is not. The observer's own hidden or
-     * loaded units (in a mine, a Burrow, a building under construction, a transport) go to `inside`. */
+     * loaded units (in a mine, a Burrow, a building under construction, a transport) are kept, flagged
+     * BU_INSIDE (the JSON observation's `inside`). */
     DWORD f20 = *(DWORD *)(u + 0x20);
     int loaded = (unit_flags(u) & UF_LOADED) != 0;
     if (!(f20 & 2) && !loaded)
         return 1;
-    if ((f20 & 1) || loaded) {
-        if (owner == o->player) {
-            JW *w = &o->inside;
-            jw_open(w, '{');
-            jw_key(w, "unit_id");
-            jw_uint(w, obs_id(u));
-            jw_key(w, "type_id");
-            jw_fourcc(w, *(DWORD *)(u + 0x34));
-            jw_key(w, "x");
-            jw_num(w, bits_to_f(unit_xy_bits(u, 0)));
-            jw_key(w, "y");
-            jw_num(w, bits_to_f(unit_xy_bits(u, 4)));
-            jw_key(w, "hp");
-            jw_int(w, (int)life);
-            write_order(w, u);
-            jw_close(w, '}');
+    int inside = (f20 & 1) || loaded;
+    if (inside ? owner != o->player : !unit_visible(u, o->slot))
+        return 1;
+    BinUnit r = {obs_id(u), *(DWORD *)(u + 0x34), owner, bits_to_f(unit_xy_bits(u, 0)), bits_to_f(unit_xy_bits(u, 4)),
+                 life, bits_to_f(unit_state_bits(u, 1)), bits_to_f(unit_state_bits(u, 2)),
+                 bits_to_f(unit_state_bits(u, 3))};
+    r.flags = (owner == o->player ? BU_OWN : 0) | (unit_is_structure(u) ? BU_STRUCTURE : 0) |
+              (unit_is_hero(u) ? BU_HERO : 0) | (inside ? BU_INSIDE : 0);
+    r.level = unit_hero_level(u);
+    r.order_target = 0xffffffff;
+    gather_chain(o, u, &r);
+    if (r.flags & BU_OWN) {
+        BYTE *ord = current_order(u);
+        if (ord) {
+            r.order_id = *(DWORD *)(ord + 0x24);
+            r.order_target = *(DWORD *)(ord + 0x58);
+            r.order_x = *(float *)(ord + 0x48);
+            r.order_y = *(float *)(ord + 0x50);
         }
-        return 1;
-    }
-    if (!unit_visible(u, o->slot))
-        return 1;
-    DWORD type = *(DWORD *)(u + 0x34);
-    float x = bits_to_f(unit_xy_bits(u, 0)), y = bits_to_f(unit_xy_bits(u, 4));
-    int maxhp = (int)bits_to_f(unit_state_bits(u, 1)), mana = (int)bits_to_f(unit_state_bits(u, 2)),
-        maxmana = (int)bits_to_f(unit_state_bits(u, 3));
-    int structure = unit_is_structure(u), hero = unit_is_hero(u), level = unit_hero_level(u), own = owner == o->player;
-    JW *w = own ? &o->own : &o->others;
-    jw_open(w, '{');
-    jw_key(w, "unit_id");
-    jw_uint(w, obs_id(u));
-    jw_key(w, "type_id");
-    jw_fourcc(w, type);
-    jw_key(w, "owner");
-    jw_int(w, owner);
-    jw_key(w, "x");
-    jw_num(w, x);
-    jw_key(w, "y");
-    jw_num(w, y);
-    jw_key(w, "hp");
-    jw_int(w, (int)life);
-    jw_key(w, "max_hp");
-    jw_int(w, maxhp);
-    jw_key(w, "mana");
-    jw_int(w, mana);
-    jw_key(w, "max_mana");
-    jw_int(w, maxmana);
-    jw_key(w, "structure");
-    jw_bool(w, structure);
-    jw_key(w, "hero");
-    jw_bool(w, hero);
-    jw_key(w, "level");
-    jw_int(w, level);
-    write_buffs(w, u);
-    if (own) {
-        write_order(w, u);
-        if (structure)
-            write_production(w, u);
-        write_abilities(w, u);
-    }
-    jw_close(w, '}');
-    if (own && *(BYTE **)(u + 0x404)) {
-        for (int slot = 0; slot < 6; slot++) {
+        /* UnitItemInSlot: inventory ability [u+0x404]; item type [+0x34], charges [+0x18c] */
+        for (DWORD slot = 0; *(BYTE **)(u + 0x404) && slot < 6; slot++) {
             BYTE *it = unit_item_in_slot(u, slot);
-            if (!it)
-                continue;
-            w = &o->inventory;
-            jw_open(w, '{');
-            jw_key(w, "unit_id");
-            jw_uint(w, obs_id(u));
-            jw_key(w, "slot");
-            jw_int(w, slot);
-            jw_key(w, "type_id");
-            jw_fourcc(w, *(DWORD *)(it + 0x34));
-            jw_key(w, "charges");
-            jw_int(w, *(int *)(it + 0x18c));
-            jw_close(w, '}');
+            if (it) {
+                BinInventory v = {r.unit_id, slot, *(DWORD *)(it + 0x34), *(int *)(it + 0x18c)};
+                bb_push(&o->t[T_INVENTORY], &v, sizeof v);
+            }
         }
     }
-    return 1;
-}
-static int __cdecl obs_item_cb(BYTE *it, void *ctx) {
-    Obs *o = (Obs *)ctx;
-    JW *w = &o->items;
-    if (!item_on_ground(it))
-        return 1;
-    float x = bits_to_f(unit_xy_bits(it, 0)), y = bits_to_f(unit_xy_bits(it, 4));
-    if (!point_visible(x, y, o->player_handle))
-        return 1;
-    jw_open(w, '{');
-    jw_key(w, "item_id");
-    jw_uint(w, obs_id(it));
-    jw_key(w, "type_id");
-    jw_fourcc(w, *(DWORD *)(it + 0x34));
-    jw_key(w, "x");
-    jw_num(w, x);
-    jw_key(w, "y");
-    jw_num(w, y);
-    jw_close(w, '}');
+    bb_push(&o->t[T_UNITS], &r, sizeof r);
     return 1;
 }
 
@@ -592,7 +451,7 @@ __declspec(naked) int __cdecl script_version(void) {
     }
 }
 int player_slot(int jass_id) {
-    if (jass_id >= 12 && jass_id <= 15 && (unsigned)script_version() < 0x17ac)
+    if (jass_id >= 12 && jass_id <= 15 && (unsigned)map_script_version() < 0x17ac)
         return jass_id + 12;
     return jass_id;
 }
@@ -609,80 +468,292 @@ void accessors_init(void) {
     g_fn_resolve_pair = g_base + RVA_RESOLVE_PAIR;
 }
 
-/* The observation as one JSON object (docs/specs/observations.md). Game thread. */
-void obs_write_json(JW *w, int player, int seq) {
+/* Everything one observation reports for `player`, into the static tables; fills the header too. The
+ * player's unread events are consumed. Game thread. */
+static Obs *gather(int player, int seq, BinHeader *h) {
     static Obs o;
-    jw_reset(&o.own);
-    jw_reset(&o.inside);
-    jw_reset(&o.others);
-    jw_reset(&o.inventory);
-    jw_reset(&o.items);
-    jw_reset(&o.destructables);
+    for (int i = 0; i < OBS_TABLES; i++)
+        o.t[i].n = 0;
     o.player = player;
     o.slot = player_slot(player);
-    int pj = NATIVE(RVA_N_PLAYER, NativeI_I)(player);
-    o.player_handle = pj;
-    NativeI_II ps = NATIVE(RVA_N_GETPLAYERSTATE, NativeI_II);
     ((EnumObjectsFn)(g_base + RVA_ENUM_OBJECTS))(UNIT_CLASS, (void *)obs_unit_cb, &o, 0);
     ((EnumObjectsFn)(g_base + RVA_ENUM_OBJECTS))(ITEM_CLASS, (void *)obs_item_cb, &o, 0);
+    ((EnumObjectsFn)(g_base + RVA_ENUM_OBJECTS))(DESTRUCTABLE_CLASS, (void *)obs_destructable_cb, &o, 0);
+    memset(h, 0, sizeof *h);
+    h->magic = OBS_MAGIC;
+    h->version = OBS_VERSION;
+    h->player = (DWORD)player;
+    h->sequence = (DWORD)seq;
+    h->game_time_ms = game_time();
+    h->events_lost = events_gather(&o.t[T_EVENTS], player);
+    int pj = NATIVE(RVA_N_PLAYER, NativeI_I)(player);
+    NativeI_II ps = NATIVE(RVA_N_GETPLAYERSTATE, NativeI_II);
+    h->gold = ps(pj, 1);
+    h->lumber = ps(pj, 2);
+    h->food_used = ps(pj, 5);
+    h->food_cap = ps(pj, 4);
+    const char *result = player_result(player);
+    h->result = !strcmp(result, "victory") ? 1 : !strcmp(result, "defeat") ? 2 : !strcmp(result, "draw") ? 3 : 0;
+    metadata_scores(player, h->score);
+    h->tables = OBS_TABLES;
+    DWORD size = sizeof *h;
+    for (int i = 0; i < OBS_TABLES; i++) {
+        h->table[i] = (BinTable){size, (DWORD)COUNT(&o, i), RECORD_SIZE[i]};
+        size += (DWORD)o.t[i].n;
+    }
+    h->size = size;
+    return &o;
+}
+
+/* The binary observation (obsbin.h) into dst, at most cap bytes: the header, then each table's records.
+ * Returns its size, or 0 when it does not fit. Game thread. */
+DWORD obs_write_binary(BYTE *dst, DWORD cap, int player, int seq) {
+    BinHeader h;
+    Obs *o = gather(player, seq, &h);
+    if (h.size > cap)
+        return 0;
+    memcpy(dst, &h, sizeof h);
+    for (int i = 0; i < OBS_TABLES; i++)
+        memcpy(dst + h.table[i].offset, o->t[i].p, o->t[i].n);
+    return h.size;
+}
+
+/* ---- the JSON observation, formatted from the same records ---------------------------------------- */
+static void json_order(JW *w, const BinUnit *r) {
+    jw_key(w, "order");
+    if (!r->order_id) {
+        jw_null(w);
+        return;
+    }
+    jw_open(w, '{');
+    jw_key(w, "name");
+    const char *name = r->order_id == 851970u ? "harvest" : NULL; /* the harvest command's own id (act.c O_HARVEST) */
+    for (size_t i = 0; i < sizeof ORDER_NAMES / sizeof ORDER_NAMES[0] && !name; i++)
+        if (ORDER_NAMES[i].id == r->order_id)
+            name = ORDER_NAMES[i].name;
+    if (name)
+        jw_string(w, name);
+    else if (r->order_id >> 24)
+        jw_fourcc(w, r->order_id);
+    else
+        jw_uint(w, r->order_id);
+    jw_key(w, "target_id");
+    if (r->order_target != 0xffffffff)
+        jw_uint(w, r->order_target);
+    else
+        jw_null(w);
+    jw_key(w, "x");
+    jw_num(w, r->order_x);
+    jw_key(w, "y");
+    jw_num(w, r->order_y);
+    jw_close(w, '}');
+}
+/* where one unit's records end in a table, from `at`: each table lists them contiguously in unit order,
+ * and every record there starts with the unit id */
+static size_t unit_end(const Obs *o, int table, size_t at, DWORD unit) {
+    while (at < COUNT(o, table) && *(const DWORD *)(o->t[table].p + at * RECORD_SIZE[table]) == unit)
+        at++;
+    return at;
+}
+static void json_units(JW *own, JW *inside, JW *others, JW *inventory, const Obs *o) {
+    size_t buff = 0, ability = 0, queued = 0, item = 0;
+    for (size_t i = 0; i < COUNT(o, T_UNITS); i++) {
+        const BinUnit *r = &RECORDS(o, T_UNITS, BinUnit)[i];
+        size_t b0 = buff, a0 = ability, q0 = queued, v0 = item;
+        buff = unit_end(o, T_BUFFS, buff, r->unit_id);
+        ability = unit_end(o, T_ABILITIES, ability, r->unit_id);
+        queued = unit_end(o, T_QUEUE, queued, r->unit_id);
+        item = unit_end(o, T_INVENTORY, item, r->unit_id);
+        JW *w = r->flags & BU_INSIDE ? inside : r->flags & BU_OWN ? own : others;
+        jw_open(w, '{');
+        jw_key(w, "unit_id");
+        jw_uint(w, r->unit_id);
+        jw_key(w, "type_id");
+        jw_fourcc(w, r->type_id);
+        if (r->flags & BU_INSIDE) {
+            jw_key(w, "x");
+            jw_num(w, r->x);
+            jw_key(w, "y");
+            jw_num(w, r->y);
+            jw_key(w, "hp");
+            jw_int(w, (int)r->hp);
+            json_order(w, r);
+            jw_close(w, '}');
+            continue;
+        }
+        jw_key(w, "owner");
+        jw_int(w, r->owner);
+        jw_key(w, "x");
+        jw_num(w, r->x);
+        jw_key(w, "y");
+        jw_num(w, r->y);
+        jw_key(w, "hp");
+        jw_int(w, (int)r->hp);
+        jw_key(w, "max_hp");
+        jw_int(w, (int)r->max_hp);
+        jw_key(w, "mana");
+        jw_int(w, (int)r->mana);
+        jw_key(w, "max_mana");
+        jw_int(w, (int)r->max_mana);
+        jw_key(w, "structure");
+        jw_bool(w, (r->flags & BU_STRUCTURE) != 0);
+        jw_key(w, "hero");
+        jw_bool(w, (r->flags & BU_HERO) != 0);
+        jw_key(w, "level");
+        jw_int(w, r->level);
+        jw_key(w, "buffs");
+        jw_open(w, '[');
+        for (size_t k = b0; k < buff; k++)
+            jw_fourcc(w, RECORDS(o, T_BUFFS, BinBuff)[k].buff_id);
+        jw_close(w, ']');
+        if (r->flags & BU_OWN) {
+            json_order(w, r);
+            if (r->flags & BU_STRUCTURE) {
+                jw_key(w, "state");
+                if (r->state)
+                    jw_string(w, r->state == 1 ? "constructing" : "upgrading");
+                else
+                    jw_null(w);
+                jw_key(w, "state_seconds");
+                jw_num(w, r->state_seconds);
+                jw_key(w, "queue");
+                jw_open(w, '[');
+                for (size_t k = q0; k < queued; k++)
+                    jw_fourcc(w, RECORDS(o, T_QUEUE, BinQueue)[k].type_id);
+                jw_close(w, ']');
+                jw_key(w, "queue_seconds");
+                jw_num(w, r->queue_seconds);
+            }
+            jw_key(w, "abilities");
+            jw_open(w, '[');
+            for (size_t k = a0; k < ability; k++) {
+                const BinAbility *a = &RECORDS(o, T_ABILITIES, BinAbility)[k];
+                jw_open(w, '{');
+                jw_key(w, "ability_id");
+                jw_fourcc(w, a->ability_id);
+                jw_key(w, "level");
+                jw_int(w, a->level);
+                jw_key(w, "mana_cost");
+                jw_int(w, a->mana_cost);
+                jw_key(w, "cooldown_seconds");
+                jw_num(w, a->cooldown_seconds);
+                jw_key(w, "cooldown_remaining");
+                jw_num(w, a->cooldown_remaining);
+                jw_close(w, '}');
+            }
+            jw_close(w, ']');
+            for (size_t k = v0; k < item; k++) {
+                const BinInventory *v = &RECORDS(o, T_INVENTORY, BinInventory)[k];
+                jw_open(inventory, '{');
+                jw_key(inventory, "unit_id");
+                jw_uint(inventory, v->unit_id);
+                jw_key(inventory, "slot");
+                jw_int(inventory, v->slot);
+                jw_key(inventory, "type_id");
+                jw_fourcc(inventory, v->type_id);
+                jw_key(inventory, "charges");
+                jw_int(inventory, v->charges);
+                jw_close(inventory, '}');
+            }
+        }
+        jw_close(w, '}');
+    }
+}
+static void json_list(JW *w, const char *key, const JW *items) {
+    jw_key(w, key);
+    jw_open(w, '[');
+    jw_splice(w, items);
+    jw_close(w, ']');
+}
+
+/* The observation as one JSON object (docs/specs/observations.md). Game thread. */
+void obs_write_json(JW *w, int player, int seq) {
+    static JW own, inside, others, inventory;
+    BinHeader h;
+    const Obs *o = gather(player, seq, &h);
+    jw_reset(&own);
+    jw_reset(&inside);
+    jw_reset(&others);
+    jw_reset(&inventory);
+    json_units(&own, &inside, &others, &inventory, o);
     jw_open(w, '{');
     jw_key(w, "protocol_version");
     jw_int(w, 1);
     jw_key(w, "observer");
     jw_int(w, player);
-    metadata_write(w, player);
+    metadata_write(w, player, h.score);
     jw_key(w, "sequence");
     jw_int(w, seq);
     jw_key(w, "game_time_seconds");
-    jw_num(w, game_time() / 1000.0);
+    jw_num(w, h.game_time_ms / 1000.0);
     jw_key(w, "player");
     jw_open(w, '{');
     jw_key(w, "gold");
-    jw_int(w, ps(pj, 1));
+    jw_int(w, h.gold);
     jw_key(w, "lumber");
-    jw_int(w, ps(pj, 2));
+    jw_int(w, h.lumber);
     jw_key(w, "food_used");
-    jw_int(w, ps(pj, 5));
+    jw_int(w, h.food_used);
     jw_key(w, "food_cap");
-    jw_int(w, ps(pj, 4));
+    jw_int(w, h.food_cap);
     jw_close(w, '}');
-    jw_key(w, "units");
-    jw_open(w, '[');
-    jw_splice(w, &o.own);
-    jw_close(w, ']');
-    jw_key(w, "inside");
-    jw_open(w, '[');
-    jw_splice(w, &o.inside);
-    jw_close(w, ']');
-    jw_key(w, "visible_enemies");
-    jw_open(w, '[');
-    jw_splice(w, &o.others);
-    jw_close(w, ']');
+    json_list(w, "units", &own);
+    json_list(w, "inside", &inside);
+    json_list(w, "visible_enemies", &others);
     jw_key(w, "items");
     jw_open(w, '[');
-    jw_splice(w, &o.items);
+    for (size_t k = 0; k < COUNT(o, T_ITEMS); k++) {
+        const BinItem *it = &RECORDS(o, T_ITEMS, BinItem)[k];
+        jw_open(w, '{');
+        jw_key(w, "item_id");
+        jw_uint(w, it->item_id);
+        jw_key(w, "type_id");
+        jw_fourcc(w, it->type_id);
+        jw_key(w, "x");
+        jw_num(w, it->x);
+        jw_key(w, "y");
+        jw_num(w, it->y);
+        jw_close(w, '}');
+    }
     jw_close(w, ']');
-    jw_key(w, "inventory");
-    jw_open(w, '[');
-    jw_splice(w, &o.inventory);
-    jw_close(w, ']');
+    json_list(w, "inventory", &inventory);
     jw_key(w, "events");
     jw_open(w, '[');
-    unsigned lost = emit_events(w, player);
+    events_json(w, RECORDS(o, T_EVENTS, BinEvent), COUNT(o, T_EVENTS));
     jw_close(w, ']');
     jw_key(w, "events_lost");
-    jw_uint(w, lost);
+    jw_uint(w, h.events_lost);
     jw_key(w, "chat");
-    if (pj == NATIVE(RVA_N_LOCAL_PLAYER, NativeI_V)())
+    if (NATIVE(RVA_N_PLAYER, NativeI_I)(player) == NATIVE(RVA_N_LOCAL_PLAYER, NativeI_V)())
         chat_write_json(w);
     else {
         jw_open(w, '[');
         jw_close(w, ']');
     }
-    ((EnumObjectsFn)(g_base + RVA_ENUM_OBJECTS))(DESTRUCTABLE_CLASS, (void *)obs_destructable_cb, &o, 0);
     jw_key(w, "destructables");
     jw_open(w, '[');
-    jw_splice(w, &o.destructables);
+    for (size_t k = 0; k < COUNT(o, T_DESTRUCTABLES); k++) {
+        const BinDestructable *d = &RECORDS(o, T_DESTRUCTABLES, BinDestructable)[k];
+        jw_open(w, '{');
+        jw_key(w, "id");
+        jw_uint(w, d->id);
+        jw_key(w, "type_id");
+        jw_fourcc(w, d->type_id);
+        jw_key(w, "x");
+        jw_num(w, d->x);
+        jw_key(w, "y");
+        jw_num(w, d->y);
+        jw_key(w, "hp");
+        jw_num(w, d->hp);
+        jw_key(w, "resource");
+        if (d->flags & BD_LUMBER)
+            jw_string(w, "lumber");
+        else
+            jw_null(w);
+        jw_key(w, "invulnerable");
+        jw_bool(w, (d->flags & BD_INVULNERABLE) != 0);
+        jw_close(w, '}');
+    }
     jw_close(w, ']');
     jw_key(w, "result");
     jw_string(w, player_result(player));

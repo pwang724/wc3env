@@ -50,6 +50,13 @@ class Observation:
     payload: dict[str, Any]
 
     @classmethod
+    def of(cls, observation) -> Observation:
+        """From a JSON observation or a binary.BinaryObservation."""
+        if isinstance(observation, dict):
+            return cls.from_dict(observation)
+        return cls(observation.sequence, observation.game_time_seconds, observation.own_unit_ids, {})
+
+    @classmethod
     def from_dict(cls, message: dict[str, Any]) -> Observation:
         if message.get("protocol_version") != PROTOCOL_VERSION:
             raise ProtocolError(
@@ -71,6 +78,24 @@ class Action:
 
     def to_dict(self) -> dict[str, Any]:
         return {"unit_id": self.unit_id, "command": self.command, "arguments": self.arguments}
+
+
+def own_unit_ids(observation) -> frozenset[int]:
+    """The observer's units, from a JSON observation (`units`) or a binary.BinaryObservation (its OWN units,
+    including those inside a mine, building or transport)."""
+    if isinstance(observation, dict):
+        return frozenset(int(u["unit_id"]) for u in observation["units"])
+    return observation.own_unit_ids
+
+
+def observation_result(observation) -> str:
+    """The result in a JSON or binary observation: empty, "victory", "defeat" or "draw"."""
+    return observation.get("result", "") if isinstance(observation, dict) else observation.result
+
+
+def observation_seconds(observation) -> float:
+    """Game time of a JSON or binary observation."""
+    return observation["game_time_seconds"] if isinstance(observation, dict) else observation.game_time_seconds
 
 
 def validate_actions(observation: Observation, actions: list[Action]) -> None:

@@ -30,8 +30,8 @@ final observations readable).
 | `create_game` | `map`, `players`: nonempty list of `{slot, control, race?}`, `mode`: stepping/realtime | launched, ended | `game_time_ms`, `map`, `players`; enters in_game |
 | `reset` | | in_game, ended | `{}`; reloads and holds at 1000 ms; enters launched |
 | `save_replay` | `path`: absolute, under 260 bytes | in_game, ended | `{game_time_ms}`; writes the episode's native `.w3g` |
-| `step` | `ms`: multiple of 25 in 25..60000 | in_game, stepping only | `game_time_ms`, `frames`, `elapsed_ms`, `reason` |
-| `observe` | `player`: slot, default 0 | in_game, ended | [Observation](observations.md) |
+| `step` | `ms`: multiple of 25 in 25..60000; `observe`: optional list of distinct player slots | in_game, stepping only | `game_time_ms`, `frames`, `elapsed_ms`, `reason`; with `observe`, `observations`: `[{player, offset, size}]` [binary observations](observations.md#binary-observations) written after the step |
+| `observe` | `player`: slot, default 0; `format`: `json` (default) or `binary` | in_game, ended | [Observation](observations.md), or for `binary` `observations`: `[{player, offset, size}]` |
 | `act` | `player`, `actions` | in_game | `rejected`: list of `{index, reason}`; `placements`: resolved `{index, x, y}` for native build searches; others queued |
 | `debug` | `op`, `args`: object | in_game | Op-specific; see Debug below |
 | `quit` | | Any | `{}`; process exits after replying |
@@ -90,7 +90,7 @@ Test/staging API, separate from agent actions. Invalid arguments return `bad_par
 |----|------|---------------|
 | `speed` | finite `factor` >0 and <=2048 | Clock multiplier |
 | `waitfloor` | integer `ms` in 0..1000 | Minimum real duration of scaled waits |
-| `render` | `on` | 0 skips presentation |
+| `render` | `on` | 0 skips drawing and presentation once the match is held |
 | `spawn` | `type_id, player, x, y, n=1, columns=4, spacing=64` | Grid with 1..500 units, 1..500 columns and spacing 0..10000; returns `unit_ids` |
 | `kill`, `remove` | `unit_id` | Kill or remove unit |
 | `level` | `unit_id, level` | Set hero level |

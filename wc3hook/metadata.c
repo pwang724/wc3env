@@ -61,7 +61,7 @@ static const char *SCORES[] = {"units_trained",
                                "resource_total",
                                "total"}; /* common.j PLAYER_SCORE_* enum order, 0..24 */
 
-void metadata_write(JW *w, int observer) {
+void metadata_write(JW *w, int observer, const int score[25]) {
     int own = NATIVE(RVA_N_PLAYER, NativeI_I)(observer);
     int neutral = NATIVE(N_NEUTRAL_AGGRESSIVE, N0)();
     jw_key(w, "players");
@@ -115,7 +115,12 @@ void metadata_write(JW *w, int observer) {
     jw_open(w, '{');
     for (int i = 0; i < 25; i++) {
         jw_key(w, SCORES[i]);
-        jw_int(w, NATIVE(N_PLAYER_SCORE, NativeI_II)(own, i));
+        jw_int(w, score[i]);
     }
     jw_close(w, '}');
+}
+void metadata_scores(int observer, int score[25]) {
+    int own = NATIVE(RVA_N_PLAYER, NativeI_I)(observer);
+    for (int i = 0; i < 25; i++)
+        score[i] = NATIVE(N_PLAYER_SCORE, NativeI_II)(own, i);
 }
