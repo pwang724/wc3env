@@ -20,7 +20,7 @@ binary = ["numpy>=1.24"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-wc3env = ["native/*.dll"]
+wc3env = ["native/*.dll", "data/*.json", "data/maps/*.json"]
 
 [tool.ruff]
 line-length = 120

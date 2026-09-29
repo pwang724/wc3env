@@ -3,7 +3,6 @@
 import json
 import threading
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from agent_fixtures import fight, fighting_catalog, observation, own, state, world
@@ -11,6 +10,8 @@ from wc3agent.agent import Agent, Step
 from wc3agent.game.catalog import Catalog
 from wc3agent.game.featurize import describe
 from wc3agent.macro.memory import MacroMemory
+
+from wc3env.data import REFERENCE
 
 
 class AgentTest(unittest.TestCase):
@@ -255,7 +256,7 @@ class AgentTest(unittest.TestCase):
 
 class SkillPoints(unittest.TestCase):
     def test_a_point_macro_leaves_unspent_follows_the_heros_standard_build(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         replies = iter(["learn archmage1 Summon Water Elemental", ""])
 
         class Model:

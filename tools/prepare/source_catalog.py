@@ -10,7 +10,7 @@ from pathlib import Path
 from .gamedata import RACES, order_ids, profiles, read_all, slk
 
 # Game facts kept by hand or by measurement sit with the generated data, under the agent.
-GAME_DATA = Path(__file__).resolve().parents[2] / "wc3agent/src/wc3agent/game/data"
+GAME_DATA = Path(__file__).resolve().parents[2] / "src/wc3env/data"
 
 
 # Abilities whose game files name no order: the Hippogryph's Pick up Archer and the Archer's Mount Hippogryph.

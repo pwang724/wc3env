@@ -107,7 +107,9 @@ Acceptance means queued; Warcraft still applies range, resource and ability rule
 
 ## Observations and events
 
-Enumerate objects (`0x3f4ba0`) without allocating JASS handles. RPC IDs use the object's
+Enumerate objects (`0x3f4ba0`) without allocating JASS handles; live numbers (abilities, armor,
+damage, hero stats) come from natives on each listed unit's handle, created once per unit and reused
+(no memory growth over eight 20-minute episodes). RPC IDs use the object's
 `+0xc` ID; internal references also need its `+0x10` salt. Lookup has no fixed object-count
 cap. Exclude hidden, loaded and Locust units and apply each observer's fog. Old map scripts
 map neutral JASS IDs 12–15 to internal slots 24–27.
@@ -180,7 +182,7 @@ Pipe probes: `where`, `profile`, `watch`, `scan`, `dump`, `trace`, `pktlog`, `st
 `tools/bench.py` and `tools/profile_game.py` measure rollout throughput, memory and where the
 game spends CPU, on Windows and under Wine.
 Native calls use 32-bit argument slots, float pointers for real arguments and bits for real
-returns. Staging may allocate VM handles (`0x077710`, `0x4e72c0`); object enumeration must not.
+returns. Staging may allocate VM handles (`0x077710`, `0x4e72c0`); object enumeration itself must not.
 The bounds cache uses one temporary rectangle per episode and releases it immediately.
 MPQ extraction needs StormLib; see [tools](../tools/README.md).
 

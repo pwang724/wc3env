@@ -11,7 +11,7 @@ from collections import Counter
 
 from wc3agent.game.roles import ROLES, TABLE, stats_role
 
-REFERENCE_PATH = TABLE.with_name("reference.json")
+from wc3env.data import REFERENCE as REFERENCE_PATH
 
 
 def main():

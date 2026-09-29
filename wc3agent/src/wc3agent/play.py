@@ -16,9 +16,10 @@ from pathlib import Path
 from threading import Thread
 
 from wc3env import GameConfig, GameSession, MatchSetup, PlayerConfig
+from wc3env.data import MAPS, REFERENCE
 
 from .agent import MIN_TURN_SECONDS, Agent, check_turn_seconds
-from .config import PACKAGE_DIR, ROOT, environment
+from .config import ROOT, environment
 from .game.catalog import Catalog
 from .game.mapinfo import MapInfo
 from .game.policies import CAMERA_STILL, camera_spot
@@ -49,8 +50,8 @@ class MeleeConfig:
     feedback: bool = False  # lines typed in the terminal reach the macro model on its next request
     record: bool = False  # film the game window with sound and write replay.mp4 with Jev's choices beside it
     micro_call_limit: int | None = None  # optional total calls per Jev group/type
-    reference: Path = PACKAGE_DIR / "game/data/reference.json"
-    maps: Path = PACKAGE_DIR / "game/data/maps"
+    reference: Path = REFERENCE
+    maps: Path = MAPS
     out: Path | None = None
 
     def __post_init__(self):

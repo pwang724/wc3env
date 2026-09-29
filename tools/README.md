@@ -14,7 +14,7 @@
 
 ## Prepare agent inputs
 
-The agent reads game facts from `wc3agent/src/wc3agent/game/data/`, which is tracked: rerun these
+The environment ships game facts in `src/wc3env/data/` (`wc3env.data`), which is tracked: rerun these
 after a game update. Preparation needs the supported installation (`WC3_GAME_DIR` or `--game-dir`)
 and StormLib:
 
@@ -23,9 +23,9 @@ git clone --depth 1 https://github.com/ladislav-zezula/StormLib.git tools/StormL
 cmake -S tools/StormLib -B tools/StormLib/build -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=ON -DSTORM_UNICODE=OFF -DSTORM_USE_BUNDLED_LIBRARIES=ON
 cmake --build tools/StormLib/build --config Release
 
-python -m tools.prepare reference                 # game/data/reference.json
-python -m tools.prepare map                       # game/data/maps/<map>.json: starts, mines, creep camps, shops
-python -m tools.scripts.measure_item_targets      # game/data/item_targets.json, measured in a running game
+python -m tools.prepare reference                 # src/wc3env/data/reference.json
+python -m tools.prepare map                       # src/wc3env/data/maps/<map>.json: starts, mines, creep camps, shops
+python -m tools.scripts.measure_item_targets      # src/wc3env/data/item_targets.json, measured in a running game
 ```
 
 `STORMLIB_DLL` selects a StormLib built elsewhere. `reference.json` holds units (cost, food, build

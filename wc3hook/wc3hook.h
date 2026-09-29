@@ -92,6 +92,22 @@
 #define RVA_N_ABILITYMANACOST 0x097220     /* BlzGetUnitAbilityManaCost (Hunit;II)I */
 #define RVA_N_ABILITYCOOLDOWN 0x097150     /* BlzGetUnitAbilityCooldown (Hunit;II)R */
 #define RVA_N_ABILITYCOOLDOWNLEFT 0x097190 /* BlzGetUnitAbilityCooldownRemaining (Hunit;I)R */
+/* Live combat numbers and hero stats for the binary observation (observe.c) */
+#define RVA_N_UNITARMOR 0x097280       /* BlzGetUnitArmor (Hunit;)R */
+#define RVA_N_UNITBASEDAMAGE 0x097320  /* BlzGetUnitBaseDamage (Hunit;I)I */
+#define RVA_N_UNITDICENUMBER 0x0975b0  /* BlzGetUnitDiceNumber (Hunit;I)I */
+#define RVA_N_UNITDICESIDES 0x097600   /* BlzGetUnitDiceSides (Hunit;I)I */
+#define RVA_N_UNITATTACKPERIOD 0x0972c0 /* BlzGetUnitAttackCooldown (Hunit;I)R: the attack period */
+#define RVA_N_UNITMOVESPEED 0x0978b0   /* GetUnitMoveSpeed (Hunit;)R */
+#define RVA_N_UNITFACING 0x097650      /* GetUnitFacing (Hunit;)R */
+#define RVA_N_RESOURCEAMOUNT 0x095300  /* GetResourceAmount (Hunit;)I */
+#define RVA_N_HEROXP 0x092be0          /* GetHeroXP (Hunit;)I */
+#define RVA_N_HEROSKILLPOINTS 0x092a90 /* GetHeroSkillPoints (Hunit;)I */
+#define RVA_N_HEROSTR 0x092b70         /* GetHeroStr (Hunit;B)I */
+#define RVA_N_HEROAGI 0x092830         /* GetHeroAgi (Hunit;B)I */
+#define RVA_N_HEROINT 0x0928a0         /* GetHeroInt (Hunit;B)I */
+#define RVA_N_TECHCOUNT 0x094bb0       /* GetPlayerTechCount (Hplayer;IB)I */
+#define RVA_N_FLOATGAMESTATE 0x092530  /* GetFloatGameState (Hfgamestate;)R: 2 is the time of day */
 #define RVA_N_STARTMELEEAI 0x0ac230        /* StartMeleeAI (Hplayer;S)V */
 #define RVA_N_STARTCAMPAIGNAI 0x0ac200     /* StartCampaignAI (Hplayer;S)V */
 #define RVA_N_GETPLAYERSTATE 0x094a80      /* (Hplayer;Hplayerstate;)I */
@@ -197,6 +213,7 @@ typedef BYTE *(__cdecl *ResolveRefFn)(DWORD id, DWORD salt); /* RVA_RESOLVE_REF 
 typedef int(__cdecl *NativeI_V)(void);
 typedef int(__cdecl *NativeI_I)(int);
 typedef int(__cdecl *NativeI_II)(int, int);
+typedef int(__cdecl *NativeI_III)(int, int, int);
 #define NATIVE(rva, T) ((T)(g_base + (rva)))
 extern BYTE *g_fn_owner, *g_fn_state, *g_fn_unpack, *g_vm_global, *g_fn_ctx, *g_fn_ver, *g_fn_slot, *g_fn_resolve_pair;
 void accessors_init(void);

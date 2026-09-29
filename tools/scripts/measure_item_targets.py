@@ -2,7 +2,7 @@
 
 The game data does not say (a Scroll of Healing lists targets but is instant; a ward lists none but
 needs a point), so each item is given to a fresh hero and used every way until the game accepts it
-(an `item_use` event). Writes wc3agent/src/wc3agent/game/data/item_targets.json.
+(an `item_use` event). Writes src/wc3env/data/item_targets.json.
 
     python -m tools.scripts.measure_item_targets
 """
@@ -16,7 +16,7 @@ from wc3env.env import GameConfig, WC3Env
 from wc3env.protocol import Action
 from wc3env.session import PlayerConfig
 
-DATA = Path(__file__).resolve().parents[2] / "wc3agent/src/wc3agent/game/data"
+DATA = Path(__file__).resolve().parents[2] / "src/wc3env/data"
 HERO = "Hpal"
 # Items the bench cannot exercise, with the reason; marked "assumed" in the output.
 ASSUMED = {

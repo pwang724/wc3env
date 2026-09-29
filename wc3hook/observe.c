@@ -2,6 +2,7 @@
  * result. */
 #include "wc3hook.h"
 #include "orders_table.h"
+#include "upgrades_table.h"
 
 /* Enumerate units without a group handle. 0x3f4ba0(class, cb, ctx, 0) is the game's own
  * "for every live object of this class" (GroupEnumUnitsOfPlayer ends in it); the unit class
@@ -135,7 +136,8 @@ float bits_to_f(int i) {
  *              not owned (IsItemOwned), and alive (GetWidgetLife's item getter reads ITEM_LIFE).
  *              Consumed power-ups can linger unowned and unhidden, with zero life.
  * IsUnitType(STRUCTURE): flags [u+0x164] & 0x10000. IsUnitType(HERO): type id's first letter is
- * upper case ([u+0x37]) and flags bit 0x40000000 is clear. GetHeroLevel: hero record [u+0x3fc],
+ * upper case ([u+0x37]) and flags bit 0x40000000 (illusion) is clear; observations call an illusion of a
+ * hero a hero, as a player sees it, and flag only the observer's own. GetHeroLevel: hero record [u+0x3fc],
  * its +0x70 read through the game's protected-int accessor 0x3fb2b0 (thiscall, no args), + 1. */
 /* unit flag bits at [u+0x164], from the natives: 0x10 IsUnitLoaded (in a transport; a worker inside
  * a mine sets it too), 0x10000 STRUCTURE, 0x200000 IsUnitPaused, 0x40000000 IsUnitIllusion.
@@ -149,9 +151,9 @@ float bits_to_f(int i) {
 static DWORD unit_flags(BYTE *u) {
     return *(DWORD *)(u + 0x164);
 }
-static int unit_is_hero(BYTE *u) {
+static int unit_is_hero(BYTE *u) { /* a hero type, illusions included */
     BYTE c = u[0x37];
-    return c >= 'A' && c <= 'Z' && !(unit_flags(u) & UF_ILLUSION);
+    return c >= 'A' && c <= 'Z';
 }
 static int unit_is_structure(BYTE *u) {
     return (unit_flags(u) & UF_STRUCTURE) != 0;
@@ -182,9 +184,10 @@ typedef struct {
     int player, slot; /* JASS id, internal fog slot */
     BB t[OBS_TABLES];
 } Obs;
-static const DWORD RECORD_SIZE[OBS_TABLES] = {sizeof(BinUnit),     sizeof(BinAbility),   sizeof(BinBuff),
-                                              sizeof(BinQueue),    sizeof(BinInventory), sizeof(BinItem),
-                                              sizeof(BinDestructable), sizeof(BinEvent)};
+static const DWORD RECORD_SIZE[OBS_TABLES] = {sizeof(BinUnit),         sizeof(BinAbility), sizeof(BinBuff),
+                                              sizeof(BinQueue),        sizeof(BinInventory), sizeof(BinItem),
+                                              sizeof(BinDestructable), sizeof(BinEvent),   sizeof(BinHero),
+                                              sizeof(BinResearch)};
 #define RECORDS(o, table, type) ((const type *)(o)->t[table].p)
 #define COUNT(o, table) ((o)->t[table].n / RECORD_SIZE[table])
 
@@ -347,8 +350,8 @@ static int variant_id(BYTE *a, int handle, DWORD *aid, int buff) {
  * each with the total seconds at +0x7c; 'Aque' holds the queued unit and research type ids from +0xa8, front
  * first, zero after the last, and the front item's total seconds at +0x7c (the walk
  * UnitSetConstructionProgress 0x2d8bc0 does). */
-static void gather_chain(Obs *o, BYTE *u, BinUnit *r) {
-    int own = (r->flags & BU_OWN) != 0, handle = 0, n = 0; /* the handle is looked up only when needed */
+static void gather_chain(Obs *o, BYTE *u, BinUnit *r, int handle) {
+    int own = (r->flags & BU_OWN) != 0, n = 0;
     BYTE *queue = NULL;
     for (BYTE *a = pair_object(u + 0x3e8); a && n < 64; a = pair_object(a + 0x24), n++) {
         DWORD id = ability_tag(a);
@@ -363,7 +366,7 @@ static void gather_chain(Obs *o, BYTE *u, BinUnit *r) {
                 r->state_seconds = *(float *)(a + 0x7c);
             }
         }
-        if (!handle && !(handle = handle_of(u)))
+        if (!handle)
             break;
         int level = NATIVE(RVA_N_UNITABILITYLEVEL, NativeI_HI)(handle, (int)id);
         if (level <= 0 && (level = variant_id(a, handle, &id, buff)) <= 0)
@@ -385,13 +388,67 @@ static void gather_chain(Obs *o, BYTE *u, BinUnit *r) {
     r->queue_seconds = queue && *(DWORD *)(queue + 0xa8) ? *(float *)(queue + 0x7c) : 0;
 }
 
+/* Hero stats: attributes with item and aura bonuses for any visible hero (its info panel shows them), XP and
+ * unspent skill points for the observer's own. */
+static void obs_hero(Obs *o, DWORD unit_id, int handle, int own) {
+    BinHero h = {unit_id};
+    if (own) {
+        h.xp = NATIVE(RVA_N_HEROXP, NativeI_I)(handle);
+        h.skill_points = NATIVE(RVA_N_HEROSKILLPOINTS, NativeI_I)(handle);
+    }
+    h.strength = NATIVE(RVA_N_HEROSTR, NativeI_II)(handle, 1);
+    h.agility = NATIVE(RVA_N_HEROAGI, NativeI_II)(handle, 1);
+    h.intelligence = NATIVE(RVA_N_HEROINT, NativeI_II)(handle, 1);
+    bb_push(&o->t[T_HEROES], &h, sizeof h);
+}
+/* UnitItemInSlot: inventory ability [u+0x404]; item type [+0x34], charges [+0x18c]. Any listed unit's: a player
+ * can click an enemy hero and see its items. */
+static void obs_inventory(Obs *o, BYTE *u, DWORD unit_id) {
+    for (DWORD slot = 0; *(BYTE **)(u + 0x404) && slot < 6; slot++) {
+        BYTE *it = unit_item_in_slot(u, slot);
+        if (it) {
+            BinInventory v = {unit_id, slot, *(DWORD *)(it + 0x34), *(int *)(it + 0x18c)};
+            bb_push(&o->t[T_INVENTORY], &v, sizeof v);
+        }
+    }
+}
+/* The numbers the unit's info panel shows: armor, the first weapon's damage range (base + dice) and attack
+ * period, move speed and facing (degrees). */
+static void obs_combat(BinUnit *r, int handle) {
+    r->armor = bits_to_f(NATIVE(RVA_N_UNITARMOR, NativeI_I)(handle));
+    int base = NATIVE(RVA_N_UNITBASEDAMAGE, NativeI_II)(handle, 1);
+    int dice = NATIVE(RVA_N_UNITDICENUMBER, NativeI_II)(handle, 1);
+    int sides = NATIVE(RVA_N_UNITDICESIDES, NativeI_II)(handle, 1);
+    if (dice > 0 && sides > 0) {
+        r->damage_min = base + dice;
+        r->damage_max = base + dice * sides;
+    }
+    r->attack_period = bits_to_f(NATIVE(RVA_N_UNITATTACKPERIOD, NativeI_II)(handle, 1));
+    r->move_speed = bits_to_f(NATIVE(RVA_N_UNITMOVESPEED, NativeI_I)(handle));
+    r->facing = bits_to_f(NATIVE(RVA_N_UNITFACING, NativeI_I)(handle));
+}
+
 static int __cdecl obs_unit_cb(BYTE *u, void *ctx) {
     Obs *o = (Obs *)ctx;
     float life = bits_to_f(unit_state_bits(u, 0));
-    if (life <= 0)
-        return 1;
     BYTE *pl = unit_owner(u);
     int owner = pl ? player_jass_id(pl) : -1;
+    if (life <= 0) {
+        /* the observer's dead heroes stay listed (BU_DEAD) for revival: position, level, stats, items */
+        int handle;
+        if (owner != o->player || !unit_is_hero(u) || (unit_flags(u) & UF_ILLUSION) || !(handle = handle_of(u)))
+            return 1;
+        BinUnit r = {obs_id(u), *(DWORD *)(u + 0x34), owner, bits_to_f(unit_xy_bits(u, 0)),
+                     bits_to_f(unit_xy_bits(u, 4)), 0, bits_to_f(unit_state_bits(u, 1)), 0,
+                     bits_to_f(unit_state_bits(u, 3))};
+        r.flags = BU_OWN | BU_HERO | BU_DEAD;
+        r.level = unit_hero_level(u);
+        r.order_target = 0xffffffff;
+        obs_hero(o, r.unit_id, handle, 1);
+        obs_inventory(o, u, r.unit_id);
+        bb_push(&o->t[T_UNITS], &r, sizeof r);
+        return 1;
+    }
     /* what GroupEnumUnitsInRect leaves out: hidden ([u+0x20] & 1; a worker in a mine is), in a transport (UF_LOADED),
      * and a locust ([u+0x20] bit 2 clear: 0x064c on uloc against 0x...e on every other unit surveyed, 25 kinds;
      * the flag word cannot tell a locust from a gryphon, both are 0x20001001). A wisp in an entangled mine
@@ -405,15 +462,16 @@ static int __cdecl obs_unit_cb(BYTE *u, void *ctx) {
     int inside = (f20 & 1) || loaded;
     if (inside ? owner != o->player : !unit_visible(u, o->slot))
         return 1;
+    int own = owner == o->player, handle = handle_of(u);
     BinUnit r = {obs_id(u), *(DWORD *)(u + 0x34), owner, bits_to_f(unit_xy_bits(u, 0)), bits_to_f(unit_xy_bits(u, 4)),
                  life, bits_to_f(unit_state_bits(u, 1)), bits_to_f(unit_state_bits(u, 2)),
                  bits_to_f(unit_state_bits(u, 3))};
-    r.flags = (owner == o->player ? BU_OWN : 0) | (unit_is_structure(u) ? BU_STRUCTURE : 0) |
-              (unit_is_hero(u) ? BU_HERO : 0) | (inside ? BU_INSIDE : 0);
+    r.flags = (own ? BU_OWN : 0) | (unit_is_structure(u) ? BU_STRUCTURE : 0) | (unit_is_hero(u) ? BU_HERO : 0) |
+              (inside ? BU_INSIDE : 0) | (own && (unit_flags(u) & UF_ILLUSION) ? BU_ILLUSION : 0);
     r.level = unit_hero_level(u);
     r.order_target = 0xffffffff;
-    gather_chain(o, u, &r);
-    if (r.flags & BU_OWN) {
+    gather_chain(o, u, &r, handle);
+    if (own) {
         BYTE *ord = current_order(u);
         if (ord) {
             r.order_id = *(DWORD *)(ord + 0x24);
@@ -421,15 +479,15 @@ static int __cdecl obs_unit_cb(BYTE *u, void *ctx) {
             r.order_x = *(float *)(ord + 0x48);
             r.order_y = *(float *)(ord + 0x50);
         }
-        /* UnitItemInSlot: inventory ability [u+0x404]; item type [+0x34], charges [+0x18c] */
-        for (DWORD slot = 0; *(BYTE **)(u + 0x404) && slot < 6; slot++) {
-            BYTE *it = unit_item_in_slot(u, slot);
-            if (it) {
-                BinInventory v = {r.unit_id, slot, *(DWORD *)(it + 0x34), *(int *)(it + 0x18c)};
-                bb_push(&o->t[T_INVENTORY], &v, sizeof v);
-            }
-        }
     }
+    if (handle) {
+        obs_combat(&r, handle);
+        if (r.flags & BU_STRUCTURE)
+            r.resource = NATIVE(RVA_N_RESOURCEAMOUNT, NativeI_I)(handle);
+        if (r.flags & BU_HERO)
+            obs_hero(o, r.unit_id, handle, own);
+    }
+    obs_inventory(o, u, r.unit_id);
     bb_push(&o->t[T_UNITS], &r, sizeof r);
     return 1;
 }
@@ -487,6 +545,12 @@ static Obs *gather(int player, int seq, BinHeader *h) {
     h->game_time_ms = game_time();
     h->events_lost = events_gather(&o.t[T_EVENTS], player);
     int pj = NATIVE(RVA_N_PLAYER, NativeI_I)(player);
+    for (size_t i = 0; i < sizeof UPGRADES / sizeof UPGRADES[0]; i++) {
+        BinResearch t = {UPGRADES[i], NATIVE(RVA_N_TECHCOUNT, NativeI_III)(pj, (int)UPGRADES[i], 1)};
+        if (t.level > 0)
+            bb_push(&o.t[T_RESEARCH], &t, sizeof t);
+    }
+    h->time_of_day = bits_to_f(NATIVE(RVA_N_FLOATGAMESTATE, NativeI_I)(2)); /* GAME_STATE_TIME_OF_DAY */
     NativeI_II ps = NATIVE(RVA_N_GETPLAYERSTATE, NativeI_II);
     h->gold = ps(pj, 1);
     h->lumber = ps(pj, 2);
@@ -564,6 +628,8 @@ static void json_units(JW *own, JW *inside, JW *others, JW *inventory, const Obs
         ability = unit_end(o, T_ABILITIES, ability, r->unit_id);
         queued = unit_end(o, T_QUEUE, queued, r->unit_id);
         item = unit_end(o, T_INVENTORY, item, r->unit_id);
+        if (r->flags & BU_DEAD)
+            continue; /* binary observations only */
         JW *w = r->flags & BU_INSIDE ? inside : r->flags & BU_OWN ? own : others;
         jw_open(w, '{');
         jw_key(w, "unit_id");

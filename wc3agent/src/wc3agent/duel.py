@@ -25,8 +25,9 @@ from html import escape
 from pathlib import Path
 
 from wc3env import GameConfig, GameSession, MatchSetup, PlayerConfig
+from wc3env.data import MAPS, REFERENCE
 
-from .config import PACKAGE_DIR, ROOT, environment
+from .config import ROOT, environment
 from .fusion import Fights
 from .game.catalog import Catalog
 from .game.facts import learned_skills
@@ -227,8 +228,8 @@ def duel(race, jev, runs, out, hidden=True, speed=8.0, realtime=False, record=Fa
     so our army is on the same side of every replay. Results are taken when the duel is decided either way.
     `seconds`: a duel undecided by then ends as a draw."""
     settings = environment()
-    catalog = Catalog.load(PACKAGE_DIR / "game/data/reference.json")
-    mapinfo = MapInfo.load(PACKAGE_DIR / "game/data/maps" / f"{MAP_INFO}.json")
+    catalog = Catalog.load(REFERENCE)
+    mapinfo = MapInfo.load(MAPS / f"{MAP_INFO}.json")
     if not MAP.exists():
         raise FileNotFoundError(f"{MAP} is missing; build it with: python -m tools.prepare.arena")
     side = "jev" if jev else "warcraft"

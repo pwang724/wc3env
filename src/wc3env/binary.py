@@ -20,9 +20,9 @@ import numpy as np
 from .protocol import SCORE_FIELDS
 
 MAGIC = 0x31424F57
-VERSION = 1
+VERSION = 2
 MAP_BYTES = 16 << 20
-TABLES = ("units", "abilities", "buffs", "queue", "inventory", "items", "destructables", "events")
+TABLES = ("units", "abilities", "buffs", "queue", "inventory", "items", "destructables", "events", "heroes", "research")
 
 _U4, _I4, _F4 = "<u4", "<i4", "<f4"
 DTYPES = {
@@ -46,6 +46,13 @@ DTYPES = {
             ("state", _U4),
             ("state_seconds", _F4),
             ("queue_seconds", _F4),
+            ("armor", _F4),
+            ("damage_min", _I4),
+            ("damage_max", _I4),
+            ("attack_period", _F4),
+            ("move_speed", _F4),
+            ("facing", _F4),
+            ("resource", _I4),
         ]
     ),
     "abilities": np.dtype(
@@ -64,11 +71,22 @@ DTYPES = {
     "items": np.dtype([("item_id", _U4), ("type_id", _U4), ("x", _F4), ("y", _F4)]),
     "destructables": np.dtype([("id", _U4), ("type_id", _U4), ("x", _F4), ("y", _F4), ("hp", _F4), ("flags", _U4)]),
     "events": np.dtype([("kind", _U4), ("unit_id", _U4), ("other_id", _U4), ("type_id", _U4), ("value", _I4)]),
+    "heroes": np.dtype(
+        [
+            ("unit_id", _U4),
+            ("xp", _I4),
+            ("skill_points", _I4),
+            ("strength", _I4),
+            ("agility", _I4),
+            ("intelligence", _I4),
+        ]
+    ),
+    "research": np.dtype([("type_id", _U4), ("level", _I4)]),
 }
-HEADER = struct.Struct("<6I4i2I25iI24I")  # obsbin.h BinHeader: 248 bytes, one unpack per observation
+HEADER = struct.Struct("<6I4i2If25iI30I")  # obsbin.h BinHeader: 276 bytes, one unpack per observation
 
 # units.flags
-OWN, STRUCTURE, HERO, INSIDE = 1, 2, 4, 8
+OWN, STRUCTURE, HERO, INSIDE, ILLUSION, DEAD = 1, 2, 4, 8, 16, 32
 # destructables.flags
 LUMBER, INVULNERABLE = 1, 2
 # units.state
@@ -118,6 +136,7 @@ class BinaryObservation:
     food_cap: int
     result: str
     events_lost: int
+    time_of_day: float  # 0..24; day from 6 to 18
     score: dict[str, int]
     units: np.ndarray
     abilities: np.ndarray
@@ -127,6 +146,8 @@ class BinaryObservation:
     items: np.ndarray
     destructables: np.ndarray
     events: np.ndarray
+    heroes: np.ndarray
+    research: np.ndarray
     raw: bytes = field(repr=False)  # the records the arrays view
 
     def __reduce__(self):  # pickle as the bytes (VectorSession's pipes): cheaper than eight arrays
@@ -134,8 +155,9 @@ class BinaryObservation:
 
     @cached_property
     def own_unit_ids(self) -> frozenset[int]:
-        """The observer's units, including those inside a mine, building or transport (flag INSIDE)."""
-        return frozenset(self.units["unit_id"][self.units["flags"] & OWN != 0].tolist())
+        """The observer's living units, including those inside a mine, building or transport (flag INSIDE)."""
+        flags = self.units["flags"]
+        return frozenset(self.units["unit_id"][(flags & OWN != 0) & (flags & DEAD == 0)].tolist())
 
 
 class SharedObservations:
@@ -161,7 +183,7 @@ def parse(data: bytes) -> BinaryObservation:
         raise ValueError("binary observation header does not match this wc3env version")
     tables = {}
     for i, name in enumerate(TABLES):
-        offset, count, record_size = h[38 + 3 * i : 41 + 3 * i]
+        offset, count, record_size = h[39 + 3 * i : 42 + 3 * i]
         if record_size != DTYPES[name].itemsize:
             raise ValueError(f"binary observation table {name} does not match this wc3env version")
         tables[name] = np.frombuffer(data, DTYPES[name], count, offset)
@@ -175,7 +197,8 @@ def parse(data: bytes) -> BinaryObservation:
         food_cap=food_cap,
         result=RESULTS[result],
         events_lost=lost,
-        score=dict(zip(SCORE_FIELDS, h[12:37])),
+        time_of_day=h[12],
+        score=dict(zip(SCORE_FIELDS, h[13:38])),
         raw=data,
         **tables,
     )

@@ -24,7 +24,7 @@ GAME_FILES = (
 REQUIRED_GAME_FILES = ("Warcraft III.exe", "Mss32.dll", "War3.mpq", "War3x.mpq")
 # Generated on the preparation machine; see the error messages below.
 HOOK = "src/wc3env/native/wc3hook.dll"
-PREPARED = ("wc3agent/src/wc3agent/game/data/reference.json",)
+PREPARED = ("src/wc3env/data/reference.json",)
 SOURCE_DIRS = ("src/wc3env", "wc3agent/src/wc3agent", "docker", "wc3hook")
 TOOLS = ("tools/bench.py", "tools/profile_game.py", "tools/winproc.py")
 SOURCE_SUFFIXES = (".py", ".json", ".md", ".sh", ".c", ".h", ".bat", ".txt")

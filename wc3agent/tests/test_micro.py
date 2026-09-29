@@ -1,7 +1,6 @@
 """Which units micro controls, which choices each one gets, and what its request shows."""
 
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from agent_fixtures import action, answer, catalog, control, fight, fighting_catalog, own, state
@@ -14,6 +13,8 @@ from wc3agent.micro.candidates import unit_candidates
 from wc3agent.micro.memory import MicroMemory
 from wc3agent.micro.names import Names
 from wc3agent.micro.request import build_request, map_response
+
+from wc3env.data import REFERENCE
 
 
 def micro_agent(test, game_catalog=None):
@@ -49,7 +50,7 @@ class Choices(unittest.TestCase):
         self.assertIn("keep", self.options(obs, index=1))
 
     def test_only_the_toggle_that_changes_something_is_offered_once_its_state_is_known(self):
-        reference = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        reference = Catalog.load(REFERENCE)
         obs = fight()
         footman = obs["units"][1]
 
@@ -73,7 +74,7 @@ class Choices(unittest.TestCase):
         self.assertFalse({"defend_Adef", "healon_Ahea"} & keys)
 
     def test_a_summon_is_offered_only_with_an_enemy_near(self):
-        reference = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        reference = Catalog.load(REFERENCE)
         self.assertEqual(
             {raw: summons_unit(reference, raw) for raw in ("AHwe", "AOsf", "AEfn", "AOsw", "AHbz")},
             {"AHwe": True, "AOsf": True, "AEfn": True, "AOsw": False, "AHbz": False},  # wards and spells are not
@@ -203,7 +204,7 @@ class Choices(unittest.TestCase):
         self.assertNotIn(hero["unit_id"], memory.dead_ends)
 
     def test_worker_toggles_and_economic_spells_are_never_micro_options(self):
-        reference = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        reference = Catalog.load(REFERENCE)
 
         def live(aid):
             return dict(ability_id=aid, level=1, mana_cost=0, cooldown_seconds=0, cooldown_remaining=0)
@@ -578,7 +579,7 @@ class CreepEscape(unittest.TestCase):
 
 class SpellCopies(unittest.TestCase):
     def setUp(self):
-        self.reference = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        self.reference = Catalog.load(REFERENCE)
 
     def test_a_creeps_copy_of_a_spell_is_marked_whichever_is_seen_first(self):
         names = Names(self.reference)

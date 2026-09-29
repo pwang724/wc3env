@@ -19,8 +19,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from wc3env import GameConfig, GameSession, MatchSetup, PlayerConfig
+from wc3env.data import REFERENCE
 
-from .config import PACKAGE_DIR, ROOT, environment
+from .config import ROOT, environment
 from .control import Control
 from .game.catalog import Catalog
 from .game.policies import (
@@ -192,7 +193,7 @@ def fuse(config: FusionConfig):
     label = "fusion" if config.jev else "ai-only"
     out = config.out or ROOT / "sessions" / f"{label}-{datetime.now(UTC):%Y%m%dT%H%M%SZ}"
     out.mkdir(parents=True, exist_ok=True)
-    catalog = Catalog.load(PACKAGE_DIR / "game/data/reference.json")
+    catalog = Catalog.load(REFERENCE)
     log = RunLog(out, config, None, None, debug=config.debug)
     log.summary["model"] = settings.get("TYPESAFE_DEFAULT_MODEL", "jev-latest") if config.jev else "none"
     opponent = PlayerConfig(1, race=RACES[config.opponent_race] if config.opponent_race else None, control="computer")

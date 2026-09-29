@@ -3,7 +3,7 @@
 import unittest
 from dataclasses import replace
 
-from wc3env.binary import INSIDE, OWN, STATES, STRUCTURE, SharedObservations, fourcc
+from wc3env.binary import DEAD, HERO, ILLUSION, INSIDE, OWN, STATES, STRUCTURE, SharedObservations, fourcc
 from wc3env.session import GameConfig, GameSession, MatchSetup, PlayerConfig
 
 CONFIG = GameConfig(
@@ -61,6 +61,58 @@ class BinaryObservationTest(unittest.TestCase):
                 self.assertEqual((queue, STATES[u["state"]]), (ju["queue"], ju["state"] or ""))
         self.assertEqual([int(d["id"]) for d in b.destructables], [d["id"] for d in j["destructables"]])
         self.assertEqual([int(i["item_id"]) for i in b.items], [i["item_id"] for i in j["items"]])
+
+    def test_live_numbers_heroes_items_research_and_the_dead(self):
+        with GameSession(replace(CONFIG, ai_agents=(), observation="binary")) as session:
+            obs = session.reset()[0]
+            self.assertAlmostEqual(obs.time_of_day, 8, delta=0.2)  # melee games start at 8:00
+            self.assertEqual([int(u["resource"]) for u in obs.units if fourcc(u["type_id"]) == "ngol"], [13500])
+            hall = next(u for u in obs.units if fourcc(u["type_id"]) == "htow")
+            x, y = float(hall["x"]) + 400, float(hall["y"])
+
+            def spawn(type_id, player, dy):
+                return session.debug("spawn", type_id=type_id, player=player, x=x, y=y + dy)["unit_ids"][0]
+
+            grunt, hero, enemy_hero = spawn("ogru", 0, 0), spawn("Obla", 0, -300), spawn("Obla", 1, -600)
+            session.debug("give", unit_id=hero, type_id="will")
+            session.debug("give", unit_id=enemy_hero, type_id="phea")
+            session.debug("research", player=0, type_id="Rhme", level=2)
+            obs = session.step({0: []})[0][0]
+            units = {int(u["unit_id"]): u for u in obs.units}
+            g, b = units[grunt], units[hero]
+            self.assertEqual((float(g["armor"]), int(g["damage_min"]), int(g["damage_max"])), (1, 18, 21))
+            self.assertAlmostEqual(float(g["attack_period"]), 1.6, places=4)
+            self.assertEqual(float(g["move_speed"]), 270)
+            self.assertAlmostEqual(float(g["facing"]), 270, places=3)  # spawned facing south
+            # the info panel's numbers: the Blademaster's agility adds armor and damage
+            self.assertEqual((int(b["damage_min"]), int(b["damage_max"])), (26, 48))
+            self.assertAlmostEqual(float(b["armor"]), 5.2, places=4)
+            heroes = {int(h["unit_id"]): tuple(h)[1:] for h in obs.heroes}
+            self.assertEqual(heroes[hero], (0, 1, 18, 24, 16))  # xp, skill points, str, agi, int
+            self.assertEqual(heroes[enemy_hero], (0, 0, 18, 24, 16))  # no XP or skill points for others
+            items = [(int(v["unit_id"]), fourcc(v["type_id"])) for v in obs.inventory]
+            self.assertIn((enemy_hero, "phea"), items)  # a player can click the enemy hero and see its items
+            self.assertIn(("Rhme", 2), [(fourcc(r["type_id"]), int(r["level"])) for r in obs.research])
+
+            use = {"unit_id": hero, "command": "use_item", "arguments": {"slot": 0, "target_id": hero}}
+            obs = session.step({0: [use]})[0][0]
+            for _ in range(8):
+                illusions = [u for u in obs.units if u["flags"] & ILLUSION]
+                if illusions:
+                    break
+                obs = session.step({0: []})[0][0]
+            # a hero's illusion is a hero, as a player sees it; only the observer's own are flagged
+            self.assertEqual(
+                [(fourcc(u["type_id"]), int(u["flags"])) for u in illusions], [("Obla", OWN | HERO | ILLUSION)]
+            )
+
+            session.debug("kill", unit_id=hero)
+            obs = session.step({0: []})[0][0]
+            dead = next(u for u in obs.units if int(u["unit_id"]) == hero)
+            self.assertEqual(int(dead["flags"]), OWN | HERO | DEAD)
+            self.assertNotIn(hero, obs.own_unit_ids)
+            self.assertIn(hero, obs.heroes["unit_id"].tolist())
+            self.assertNotIn(hero, [u["unit_id"] for u in session.game.rpc.observe(0)["units"]])
 
     def test_binary_session_steps_and_validates_actions(self):
         with GameSession(replace(CONFIG, observation="binary")) as session:

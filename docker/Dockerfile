@@ -52,6 +52,5 @@ CMD ["smoke"]
 # Optional agent layer; wc3env itself does not depend on wc3agent.
 FROM environment AS agent
 COPY --from=wheels /wheels/agent/ /opt/wheels/agent/
-COPY wc3agent/src/wc3agent/game/data/ /opt/prepared/
 ARG INIT_WINE=1
 RUN if [ "$INIT_WINE" = 1 ]; then bash /opt/worker/with-display.sh bash /opt/worker/install.sh agent; fi

@@ -49,7 +49,7 @@ Shared fixtures live in `tests/fakes.py`, `tests/e2e/support.py`, and
 
 ## Guidelines
 
-- Commit generated reference data, including `wc3agent/src/wc3agent/game/data/reference.json`,
+- Commit generated reference data, including `src/wc3env/data/reference.json`,
   with the code that generates or uses it. Do not gitignore generated references.
 - Keep game binaries, maps, raw asset dumps, activation files and run output local.
   `assets/`, `runs/` and `sessions/` remain ignored.

@@ -30,7 +30,7 @@ Own units add their current order and abilities; own structures also add their p
 | `state_seconds` | Total seconds that construction or upgrade takes, not the time left; pair it with the `construct_start`/`upgrade_start` event time |
 | `queue` | Structures only: queued unit and research type ids, in progress first, at most seven |
 | `queue_seconds` | Total seconds for the item in progress; it began at the latest `train_start`/`research_start` for that structure |
-| `abilities` | Every owned unit, including structures: every ability the unit has learned, with its `level`, live `mana_cost`, `cooldown_seconds` and `cooldown_remaining`. Internal abilities (movement, inventory, hero attributes) are listed too; tell them apart by id. Readback does not establish castability, pathing or immunity. Completed research is not listed: count `research_finish` events |
+| `abilities` | Every owned unit, including structures: every ability the unit has learned, with its `level`, live `mana_cost`, `cooldown_seconds` and `cooldown_remaining`. Internal abilities (movement, inventory, hero attributes) are listed too; tell them apart by id. Readback does not establish castability, pathing or immunity. Completed research is not listed: count `research_finish` events (binary observations list it: `research`) |
 
 A unit inside something is absent from `units` and listed in `inside` instead: a worker in a gold
 mine, a Wisp in an Entangled Gold Mine, a Peon in a Burrow, a builder inside the structure it is
@@ -99,11 +99,14 @@ step. Computer players are not observed; `session.game.rpc.observe_binary(slot)`
 |---|---|
 | `player`, `sequence`, `game_time_seconds` | As in JSON; `sequence` is shared with JSON observations |
 | `gold`, `lumber`, `food_used`, `food_cap`, `result`, `events_lost`, `score` | As in JSON |
-| `units` | Every own unit, including those inside a mine, building or transport (flag `INSIDE`), and every other visible unit: `unit_id, type_id, owner, x, y, hp, max_hp, mana, max_mana, flags, level, order_id, order_target, order_x, order_y, state, state_seconds, queue_seconds`. `flags` combines `OWN`, `STRUCTURE`, `HERO`, `INSIDE`. Order and production fields are set for own units only; `order_target` is `0xffffffff` for a point order; `state` indexes `STATES` |
+| `time_of_day` | 0 to 24; day lasts from 6 to 18. Melee games start at 8 |
+| `units` | Every own unit, including those inside a mine, building or transport (flag `INSIDE`), and every other visible unit: `unit_id, type_id, owner, x, y, hp, max_hp, mana, max_mana, flags, level, order_id, order_target, order_x, order_y, state, state_seconds, queue_seconds, armor, damage_min, damage_max, attack_period, move_speed, facing, resource`. `flags` combines `OWN`, `STRUCTURE`, `HERO`, `INSIDE`, `ILLUSION` (own illusions only: a player cannot tell enemy ones apart, so an illusion of a hero is a `HERO` like the real one) and `DEAD` (the observer's dead heroes, listed for revival with position, level, hero stats and items; every other row is alive). Order and production fields are set for own units only; `order_target` is `0xffffffff` for a point order; `state` indexes `STATES`. The combat numbers are what the unit's info panel shows, after upgrades, items, auras and attributes: armor, the first weapon's damage range and seconds per attack (0 without an attack), move speed and facing in degrees. `resource` is the gold left in a mine |
 | `abilities` | Own units' learned abilities: `unit_id, ability_id, level, mana_cost, cooldown_seconds, cooldown_remaining` |
 | `buffs` | `unit_id, buff_id` for every listed unit |
 | `queue` | Own structures' production queue: `unit_id, slot, type_id`, slot 0 in progress |
-| `inventory` | `unit_id, slot, type_id, charges` |
+| `inventory` | `unit_id, slot, type_id, charges`, for every listed unit with an inventory: a player can click an enemy hero and see its items |
+| `heroes` | Every listed hero: `unit_id, xp, skill_points, strength, agility, intelligence`; attributes include item and aura bonuses; `xp` and `skill_points` are the observer's heroes only (0 for others) |
+| `research` | The observer's upgrades with a level above 0: `type_id, level` |
 | `items` | Visible ground items: `item_id, type_id, x, y` |
 | `destructables` | Visible living destructables: `id, type_id, x, y, hp, flags` (`LUMBER`, `INVULNERABLE`) |
 | `events` | `kind` (engine event id; `EVENT_KINDS` names it), `unit_id`, `other_id`, `type_id`, `value`. `unit_id`, `other_id` and `type_id` are the JSON event's fields in order (`other_id` is `trained_id`, `summoned_id`, `item_id`, `buyer_id` or `attacker_id`; `type_id` is also an `ability_id`); `value` is a death's owner or a hero level |
@@ -111,7 +114,8 @@ step. Computer players are not observed; `session.game.rpc.observe_binary(slot)`
 Ids are integers; `fourcc()` turns a type, ability, buff or build-order id into its four characters.
 Order ids are the engine's (a build order's id is the structure's type id). `players`, `map` and `chat`
 are JSON only: read them with `session.game.rpc.observe(player)` when needed, for example after reset.
-Unit ordering, positions and values match the JSON observation of the same state.
+Unit ordering, positions and values match the JSON observation of the same state; the combat numbers,
+`heroes`, `research`, `time_of_day`, dead heroes and other players' inventories are binary only.
 
 ## Observation metadata
 

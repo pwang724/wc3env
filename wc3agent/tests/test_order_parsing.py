@@ -1,12 +1,13 @@
 """Macro replies become environment actions: references, groups, queueing, production and build sites."""
 
 import unittest
-from pathlib import Path
 
 from agent_fixtures import observation, own, world
 from wc3agent.game.catalog import Catalog
 from wc3agent.game.featurize import describe
 from wc3agent.game.orders import Orders
+
+from wc3env.data import REFERENCE
 
 
 class OrderParsing(unittest.TestCase):
@@ -17,7 +18,7 @@ class OrderParsing(unittest.TestCase):
         self.orders = Orders(self.world)
 
     def test_a_skill_learned_in_the_reply_can_be_cast_and_takes_a_target_only_if_it_has_one(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         self.world.catalog = self.world.references.catalog = catalog
         obs = observation(units=[own(1, "htow"), own(10, "Hamg", hero=True, level=2)])
         self.world.update(obs)
@@ -33,7 +34,7 @@ class OrderParsing(unittest.TestCase):
         )
 
     def test_heroes_give_sell_and_drop_items_by_slot(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         self.world.catalog = self.world.references.catalog = catalog
         shop = dict(unit_id=60, type_id="ngme", owner=15, x=900.0, y=0.0, hp=1, max_hp=1, mana=0, max_mana=0,
                     structure=True, hero=False, level=0)  # fmt: skip
@@ -67,7 +68,7 @@ class OrderParsing(unittest.TestCase):
         self.assertIn("slot 1", notes[1])
 
     def test_a_dead_hero_is_shown_and_revived_not_trained_again(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         self.world.catalog = self.world.references.catalog = self.world.outcomes.catalog = catalog
         alive = observation(
             units=[

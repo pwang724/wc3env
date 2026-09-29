@@ -1,7 +1,6 @@
 """Workers as macro sees and commands them: who counts as one, where they are, what they are doing."""
 
 import unittest
-from pathlib import Path
 
 from agent_fixtures import action, fighting_catalog, own, state, worker, world
 from wc3agent.agent import Agent
@@ -11,6 +10,8 @@ from wc3agent.game.orders import Orders
 from wc3agent.game.policies import hero_builds, skill_to_learn
 from wc3agent.game.workers import harvest_kinds, is_worker
 from wc3agent.micro.memory import MicroMemory
+
+from wc3env.data import REFERENCE
 
 
 class Workers(unittest.TestCase):
@@ -43,7 +44,7 @@ class Workers(unittest.TestCase):
 class CallToArms(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        cls.catalog = Catalog.load(REFERENCE)
 
     def observation(self, raw="hpea"):
         def live(aid):
@@ -78,7 +79,7 @@ class CallToArms(unittest.TestCase):
 
 class CodeDefaults(unittest.TestCase):
     def test_an_unspent_archmage_point_goes_to_water_elemental_then_brilliance_aura(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         archmage = own(10, "Hamg", hero=True, level=1)
         self.assertEqual(skill_to_learn(catalog, archmage, {}), "AHwe")
         archmage["level"] = 2
@@ -87,7 +88,7 @@ class CodeDefaults(unittest.TestCase):
         self.assertEqual(skill_to_learn(catalog, blademaster, {}), "AOwk")  # listed order where no preference
 
     def test_every_hero_build_is_legal_and_followed(self):
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         for raw, build in hero_builds().items():
             with self.subTest(hero=raw):
                 learned = {}

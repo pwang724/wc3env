@@ -11,6 +11,8 @@ from wc3agent.micro.memory import MicroMemory
 from wc3agent.micro.names import Names
 from wc3agent.micro.request import build_request, map_response
 
+from wc3env.data import REFERENCE
+
 
 class EntityNames(unittest.TestCase):
     def test_names_survive_absence_and_death_without_renumbering_or_reuse(self):
@@ -143,12 +145,11 @@ if __name__ == "__main__":
 
 class ReusedIds(unittest.TestCase):
     def test_a_dead_units_id_given_to_a_new_unit_gets_a_new_name(self):
-        from pathlib import Path
 
         from wc3agent.game.catalog import Catalog
         from wc3agent.game.references import References
 
-        catalog = Catalog.load(Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json")
+        catalog = Catalog.load(REFERENCE)
         refs = References(catalog)
         wolf = dict(unit_id=77, type_id="osw1", hp=300, structure=False)
         refs.remember(dict(units=[wolf], events=[]))

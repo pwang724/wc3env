@@ -2,12 +2,11 @@
 
 import json
 import unittest
-from pathlib import Path
 
 from wc3agent.game.catalog import Catalog
 from wc3agent.game.roles import ROLES, TABLE, role
 
-REFERENCE = Path(__file__).parents[1] / "src/wc3agent/game/data/reference.json"
+from wc3env.data import REFERENCE
 
 
 class Roles(unittest.TestCase):

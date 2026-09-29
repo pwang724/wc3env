@@ -19,4 +19,4 @@ wc3agent = "wc3agent.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-wc3agent = ["models/rates.json", "game/data/*.json", "game/data/maps/*.json", "scenarios/definitions/*.json"]
+wc3agent = ["models/rates.json", "game/data/*.json", "scenarios/definitions/*.json"]

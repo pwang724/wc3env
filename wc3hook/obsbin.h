@@ -8,10 +8,22 @@
 #include <string.h>
 
 #define OBS_MAGIC 0x31424f57 /* "WOB1" little-endian */
-#define OBS_VERSION 1
+#define OBS_VERSION 2
 #define OBS_MAP_BYTES (16u << 20)
 
-enum { T_UNITS, T_ABILITIES, T_BUFFS, T_QUEUE, T_INVENTORY, T_ITEMS, T_DESTRUCTABLES, T_EVENTS, OBS_TABLES };
+enum {
+    T_UNITS,
+    T_ABILITIES,
+    T_BUFFS,
+    T_QUEUE,
+    T_INVENTORY,
+    T_ITEMS,
+    T_DESTRUCTABLES,
+    T_EVENTS,
+    T_HEROES,
+    T_RESEARCH,
+    OBS_TABLES
+};
 
 typedef struct {
     DWORD offset, count, record_size; /* offset from the header's first byte */
@@ -21,6 +33,7 @@ typedef struct {
     int gold, lumber, food_used, food_cap;
     DWORD result; /* 0 none, 1 victory, 2 defeat, 3 draw */
     DWORD events_lost;
+    float time_of_day; /* 0..24, day from 6 to 18 */
     int score[25]; /* PLAYER_SCORE_* order, as SCORE_FIELDS */
     DWORD tables;
     BinTable table[OBS_TABLES];
@@ -29,7 +42,9 @@ typedef struct {
 #define BU_OWN 1
 #define BU_STRUCTURE 2
 #define BU_HERO 4
-#define BU_INSIDE 8 /* the observer's unit inside a mine, building or transport */
+#define BU_INSIDE 8    /* the observer's unit inside a mine, building or transport */
+#define BU_ILLUSION 16 /* the observer's own illusions only: a player cannot tell enemy ones apart */
+#define BU_DEAD 32     /* the observer's dead hero, which can be revived; everything else lists the living */
 typedef struct {
     DWORD unit_id, type_id;
     int owner;
@@ -41,6 +56,11 @@ typedef struct {
     float order_x, order_y;
     DWORD state; /* structures: 0 none, 1 constructing, 2 upgrading */
     float state_seconds, queue_seconds;
+    /* live numbers after upgrades, items, auras and buffs, as the unit's info panel shows them */
+    float armor;
+    int damage_min, damage_max; /* first weapon: base + dice, 0 without an attack */
+    float attack_period, move_speed, facing; /* seconds per attack, speed, degrees */
+    int resource;                            /* gold left in a mine, 0 otherwise */
 } BinUnit;
 typedef struct {
     DWORD unit_id, ability_id;
@@ -76,10 +96,21 @@ typedef struct {
     int value;      /* death: owner; hero_level: level */
 } BinEvent;
 
+typedef struct {
+    DWORD unit_id;
+    int xp, skill_points; /* the observer's heroes only, 0 for others */
+    int strength, agility, intelligence; /* with item and aura bonuses */
+} BinHero;
+typedef struct {
+    DWORD type_id; /* an upgrade the observer has, at its level (GetPlayerTechCount) */
+    int level;
+} BinResearch;
+
 /* src/wc3env/binary.py's dtypes have these sizes; tests/unit/test_binary.py checks its side */
-typedef char bin_sizes_match[sizeof(BinHeader) == 248 && sizeof(BinUnit) == 72 && sizeof(BinAbility) == 24 &&
+typedef char bin_sizes_match[sizeof(BinHeader) == 276 && sizeof(BinUnit) == 100 && sizeof(BinAbility) == 24 &&
                                      sizeof(BinBuff) == 8 && sizeof(BinQueue) == 12 && sizeof(BinInventory) == 16 &&
-                                     sizeof(BinItem) == 16 && sizeof(BinDestructable) == 24 && sizeof(BinEvent) == 20
+                                     sizeof(BinItem) == 16 && sizeof(BinDestructable) == 24 && sizeof(BinEvent) == 20 &&
+                                     sizeof(BinHero) == 24 && sizeof(BinResearch) == 8
                                  ? 1
                                  : -1];
 

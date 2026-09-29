@@ -1,14 +1,13 @@
 """Scenario metric evaluation, completion and scripted opponents."""
 
 import unittest
-from pathlib import Path
 from types import SimpleNamespace
 
 from agent_fixtures import observation, own, scenario_fixture, world
 from wc3agent.game.catalog import Catalog
 from wc3agent.scenarios.scenario import Scenario, names
 
-DATA = Path(__file__).parents[1] / "src" / "wc3agent" / "game" / "data"
+from wc3env.data import REFERENCE
 
 
 class Scenarios(unittest.TestCase):
@@ -86,7 +85,7 @@ class Scenarios(unittest.TestCase):
 class OpponentsAndMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.catalog = Catalog.load(DATA / "reference.json")
+        cls.catalog = Catalog.load(REFERENCE)
 
     def test_raid_opponent_waits_then_targets_workers_then_the_hall(self):
         s = scenario_fixture(opponent="raid", opponent_after_seconds=5)
