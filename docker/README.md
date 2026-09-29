@@ -70,6 +70,13 @@ one wineserver stops scaling at about four games, and two games per prefix measu
 run Wine, so it builds with `--build-arg INIT_WINE=0` and initializes the prefix once with the
 entrypoint's `init` mode in a sandbox, whose snapshot becomes the worker image.
 
+`rollout` runs [`vector_rollout.py`](vector_rollout.py): `VectorSession` from the image's native
+Linux Python with `wine_workers()`, a Wine prefix per group of games, which is how a Linux trainer
+drives the environment. [`gcp_run.py`](gcp_run.py) runs any mode on a GCP spot VM: `setup` once
+(registry, results bucket, license files as Secret Manager secrets), `image` builds and pushes with
+Cloud Build, `run MODE ...` starts a VM that runs the container, copies `/sessions` to the bucket,
+deletes itself, and downloads the results to `runs/gcp/<vm>/`.
+
 The agent runs with `run`, for example `run scenarios --jobs 1` or `run melee --hidden`. Pass the model keys
 (`-e OPENAI_API_KEY -e TYPESAFE_API_KEY -e MACRO_PROVIDER -e MACRO_MODEL`) from the host environment, not the
 repository's whole `.env`, and drop `--network none`. Without the `/sessions` mount, output is lost when the container is removed.

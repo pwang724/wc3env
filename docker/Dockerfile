@@ -16,7 +16,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
-       python3 xvfb xauth x11-utils mesa-utils fonts-liberation \
+       python3 python3-numpy xvfb xauth x11-utils mesa-utils fonts-liberation \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://dl.winehq.org/wine-builds/winehq.key -o /etc/apt/keyrings/winehq-archive.key \
     && curl -fsSL https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources \
@@ -32,6 +32,8 @@ RUN groupadd --gid 10001 worker \
     && mkdir -p /work /sessions && chown 10001:10001 /work /sessions
 COPY docker/*.sh docker/*.py tools/bench.py tools/profile_game.py tools/winproc.py /opt/worker/
 COPY --from=wheels /wheels/environment/ /opt/wheels/environment/
+# The same package for the Linux side: a trainer's VectorSession drives Wine workers from here.
+COPY src/wc3env/ /opt/host/wc3env/
 ENV DISPLAY=:99 WINEPREFIX=/home/worker/.wine WINEARCH=wow64 \
     WINEDLLOVERRIDES="mscoree,mshtml=" WINEDEBUG=-all \
     LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe LP_NUM_THREADS=2 \

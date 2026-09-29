@@ -18,13 +18,13 @@ CONFIG = GameConfig(
 
 class VectorSessionTest(unittest.TestCase):
     def test_games_step_independently(self):
-        with VectorSession([CONFIG, CONFIG]) as games:
+        with VectorSession([CONFIG] * 4, group_size=2) as games:  # two workers of two games
             started = games.reset()
-            self.assertEqual([i for i, _ in started], [0, 1])
+            self.assertEqual([i for i, _ in started], [0, 1, 2, 3])
             for i, _ in started:
                 games.send(i, {0: []})
-            steps = [0, 0]
-            while sum(steps) < 40:
+            steps = [0] * 4
+            while sum(steps) < 80:
                 i, observations, done, info = games.recv()
                 self.assertFalse(done)
                 self.assertEqual(info["elapsed_ms"], 250)
@@ -32,7 +32,7 @@ class VectorSessionTest(unittest.TestCase):
                 self.assertEqual(observations[0].game_time_seconds, 1 + 0.25 * steps[i])
                 if steps[i] < 20:
                     games.send(i, {0: []})
-            self.assertEqual(steps, [20, 20])
+            self.assertEqual(steps, [20] * 4)
             with self.assertRaisesRegex(RuntimeError, "send"):
                 games.recv()
 

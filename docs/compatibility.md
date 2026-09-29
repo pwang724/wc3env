@@ -90,3 +90,13 @@ binary observations. Per game in an episode: 46-54x realtime. One prefix (one wi
 scale past four games (135x with four, 127x with eight); four prefixes of two games reached about
 380x while playing and about 50 game seconds per CPU second (container cgroup time), with 21% of it
 in wineserver. Launch took 13-20 s and an in-process reset 2.5 s.
+
+GCP spot `n2d-standard-8` VMs (8 vCPUs = 4 AMD cores, kernel 7.0, Ubuntu 24.04) through
+[`gcp_run.py`](../docker/gcp_run.py) on 2026-09-28, binary observations, 10-minute games:
+
+- `bench`, four prefixes of two games, two episodes each: 92.5x aggregate including launches and
+  resets with `/dev/ntsync` passed into the container, 88.7x without it; wineserver used about 20%
+  of the CPU either way, so this Wine build does not appear to use ntsync.
+- `rollout` ([`vector_rollout.py`](../docker/vector_rollout.py)): `VectorSession` from native Linux
+  Python driving Wine workers, eight games in groups of two, as a trainer would run it. 17 s
+  startup, then 522 steps/s = 130x aggregate realtime, about 14 game seconds per vCPU second.

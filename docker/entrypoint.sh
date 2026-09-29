@@ -25,19 +25,20 @@ case "$mode" in
         bash /opt/worker/install.sh
         if [ -d /opt/wheels/agent ]; then bash /opt/worker/install.sh agent; fi
         ;;
-    bench|profile)
-        # tools/bench.py, through bench_prefixes.py (--prefixes N: a wineserver per group of games), or
-        # tools/profile_game.py; linux-cpu.json adds the container's own CPU.
+    bench|profile|rollout)
+        # tools/bench.py, through bench_prefixes.py (--prefixes N: a wineserver per group of games);
+        # tools/profile_game.py; or vector_rollout.py, VectorSession from native Linux Python as a
+        # trainer runs it. linux-cpu.json adds the container's own CPU.
         python3 /opt/worker/license.py
         session="$(mktemp -d "/sessions/$mode-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXXXX")"
         export WC3_OUTPUT_DIR
         WC3_OUTPUT_DIR="$(winepath -w "$session")"
         echo "Session: $session"
-        if [ "$mode" = bench ]; then
-            set -- python3 /opt/worker/bench_prefixes.py --output-dir "$session" "$@"
-        else
-            set -- wine "$python" 'Z:\opt\worker\profile_game.py' "$@"
-        fi
+        case "$mode" in
+            bench) set -- python3 /opt/worker/bench_prefixes.py --output-dir "$session" "$@" ;;
+            profile) set -- wine "$python" 'Z:\opt\worker\profile_game.py' "$@" ;;
+            rollout) set -- env PYTHONPATH=/opt/host python3 /opt/worker/vector_rollout.py "$@" ;;
+        esac
         python3 /opt/worker/linux_cpu.py --output "$session/linux-cpu.json" -- "$@"
         ;;
     run|agent)
@@ -49,7 +50,7 @@ case "$mode" in
         wine "$python" "$@"
         ;;
     *)
-        echo 'Usage: init | smoke | bench|profile [arguments] | run <wc3agent arguments> | python [arguments]' >&2
+        echo 'Usage: init | smoke | bench|profile|rollout [arguments] | run <wc3agent arguments> | python [arguments]' >&2
         exit 2
         ;;
 esac

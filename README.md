@@ -74,6 +74,9 @@ with VectorSession([config] * 16) as games:
     i, observations, done, info = games.recv()  # whichever game finished first
 ```
 
+`group_size=2` runs two games per worker process. On a Linux host, `launch=wine_workers()` starts
+each worker under Wine with its own prefix, so each group gets its own wineserver.
+
 See [binary observations](docs/specs/observations.md#binary-observations) and
 [throughput](docs/compatibility.md#rollout-throughput); `tools/bench.py` measures a machine.
 
